@@ -9,7 +9,9 @@ if __name__=="__main__":
     model = Model(ggml_model=r'C:\Users\aloui\Documents\ai\GPT4ALL-ui\GPT4All\models\llama_cpp/gpt4all-lora-quantized-ggml.bin',
                   prompt_context=personality.personality_conditioning,
                   prompt_prefix=personality.user_message_prefix,
-                  prompt_suffix=personality.ai_message_prefix)
+                  prompt_suffix=personality.ai_message_prefix,
+                  anti_prompts=[personality.user_message_prefix, personality.ai_message_prefix])
+    print(personality.welcome_message)
     while True:
         try:
             prompt = input("You: ")

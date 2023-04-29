@@ -17,7 +17,7 @@ requirements_dev = read_requirements("requirements_dev.txt")
 
 setuptools.setup(
     name="pyaipersonality",
-    version="0.0.2",
+    version="0.0.3",
     author="Saifeddine ALOUI",
     author_email="aloui.saifeddine@gmail.com",
     description="A python library for AI personality definition",
@@ -29,7 +29,7 @@ setuptools.setup(
     extras_require={"dev": requirements_dev},
     classifiers=[
         "Programming Language :: Python :: 3.8",
-        "License :: OSI Approved :: Apache 2.0",
+        "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
 )
