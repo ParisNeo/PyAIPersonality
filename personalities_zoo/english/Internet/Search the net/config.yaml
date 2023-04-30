@@ -1,0 +1,16 @@
+ai_message_prefix: '##Search the net:'
+category: Internet
+dependencies: []
+disclaimer: ''
+language: en_XX
+link_text: '
+
+  '
+name: Search the net
+personality_conditioning: search
+personality_description: search
+user_message_prefix: '##Human:'
+user_name: user
+version: 1.0.0
+welcome_message: Welcome! I am GPT4All, a free and open assistant. What can I do for
+  you today?
