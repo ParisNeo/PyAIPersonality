@@ -40,7 +40,7 @@ Here is a list of compatible models:
 
 - [GPT-J v1.3-groovy](https://gpt4all.io/models/ggml-gpt4all-j-v1.3-groovy.bin)
 - [GPT-J v1.2-jazzy](https://gpt4all.io/models/ggml-gpt4all-j-v1.2-jazzy.bin)
-- [GPT-J gpt4all-j oridinal](https://gpt4all.io/models/ggml-gpt4all-j.bin)
+- [GPT-J gpt4all-j original](https://gpt4all.io/models/ggml-gpt4all-j.bin)
 - [Vicuna 7b quantized v1.1 q4_2](https://gpt4all.io/models/ggml-vicuna-7b-1.1-q4_2.bin)
 - [Vicuna 13b quantized v1.1 q4_2](https://gpt4all.io/models/ggml-vicuna-13b-1.1-q4_2.bin)
 
