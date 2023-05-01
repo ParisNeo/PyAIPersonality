@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Three.js Example</title>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.131.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.131.2/examples/js/loaders/GLTFLoader.js"></script>
+    
+  </head>
+  <body>
+    <div id="container"></div>
+    <script>
+      // Set up the scene
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+      const renderer = new THREE.WebGLRenderer();
+      renderer.setSize( window.innerWidth, window.innerHeight );
+      document.getElementById('container').appendChild( renderer.domElement );
+
+      // Load the 3D model
+      const loader = new THREE.GLTFLoader();
+      loader.load( '{{ model_path }}', function ( gltf ) {
+        scene.add( gltf.scene );
+      }, undefined, function ( error ) {
+        console.error( error );
+      } );
+
+      // Render the scene
+      function animate() {
+        requestAnimationFrame( animate );
+        renderer.render( scene, camera );
+      }
+      animate();
+    </script>
+  </body>
+</html>
