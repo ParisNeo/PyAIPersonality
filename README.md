@@ -20,7 +20,7 @@ Here's an example of how to use PyAIPersonality to load an AI personality and pr
 from pyaipersonality import AIPersonality
 
 if __name__ == "__main__":
-    personality = AIPersonality("personalities_zoo/english/general/gpt4all_chat_bot")
+    personality = AIPersonality("personalities_zoo/english/general/gpt4all")
     print("Done")
     print(f"{personality}")
 ```
