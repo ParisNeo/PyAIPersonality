@@ -29,16 +29,30 @@ You can use PyAIPersonality with pyllamacpp python bindings by first installing 
 ```bash
 pip install pyllamacpp
 ```
+
+Download one of the compatible models. Some models are better than others in simulating the personalities, so please make sure you select the right model as some models are very sparsely trained and have no enough culture to imersonate the character.
+
+Here is a list of compatible models:
+- [Main gpt4all model](https://huggingface.co/ParisNeo/GPT4All/resolve/main/gpt4all-lora-quantized-ggml.bin)
+- [Main gpt4all model (unfiltered version)](https://huggingface.co/ParisNeo/GPT4All/resolve/main/gpt4all-lora-unfiltered-quantized.new.bin)
+- [Vicuna 7B vrev1](https://huggingface.co/eachadea/legacy-ggml-vicuna-7b-4bit/resolve/main/ggml-vicuna-7b-4bit-rev1.bin)
+- [Vicuna 13B vrev1](https://huggingface.co/eachadea/ggml-vicuna-13b-4bit/resolve/main/ggml-vicuna-13b-4bit-rev1.bin)
+
+- [GPT-J v1.3-groovy](https://gpt4all.io/models/ggml-gpt4all-j-v1.3-groovy.bin)
+- [GPT-J v1.2-jazzy](https://gpt4all.io/models/ggml-gpt4all-j-v1.2-jazzy.bin)
+- [GPT-J gpt4all-j oridinal](https://gpt4all.io/models/ggml-gpt4all-j.bin)
+- [Vicuna 7b quantized v1.1 q4_2](https://gpt4all.io/models/ggml-vicuna-7b-1.1-q4_2.bin)
+- [Vicuna 13b quantized v1.1 q4_2](https://gpt4all.io/models/ggml-vicuna-13b-1.1-q4_2.bin)
+
 Then you can use this code to have an interactive communication with the AI through the console
 ```python
 from pyaipersonality import AIPersonality
 from pyllamacpp.model import Model
-# You need to install pyllamacpp from pypi:
 
 if __name__=="__main__":
 
     personality = AIPersonality("personalities_zoo/english/general/gpt4all_chat_bot")
-    model = Model(ggml_model=r'C:\Users\aloui\Documents\ai\GPT4ALL-ui\GPT4All\models\llama_cpp/gpt4all-lora-quantized-ggml.bin',
+    model = Model(ggml_model=r'<Your path to the ggml compatibe model>',
                   prompt_context=personality.personality_conditioning+
                   personality.link_text+
                   personality.ai_message_prefix+
