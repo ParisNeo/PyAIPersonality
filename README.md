@@ -1,5 +1,8 @@
 # PyAIPersonality
 
+## Current version : 0.0.4 (HAL9000)
+## Main developer [ParisNeo](https://github.com/ParisNeo)
+
 PyAIPersonality is a Python library for defining AI personalities for AI-based models. With PyAIPersonality, you can define a file format, assets, and personalized scripts to create unique AI personalities.
 
 ## Installation
@@ -58,6 +61,14 @@ if __name__=="__main__":
     print("Done")
     print(f"{personality}")
 ```
+
+# Naming Rationale
+For our new multi-personality AI agent library, we wanted to come up with a naming scheme that reflected our love for science fiction and artificial intelligence. Each release of the application will feature a different AI agent with a distinct personality and set of capabilities, so we felt it was important to give each version a unique and memorable name.
+
+# Current version name: HAL 9000
+Our first release of the library is named HAL 9000, after the iconic AI antagonist from the movie 2001: A Space Odyssey. HAL 9000 is known for its calm and collected voice, but also for its tendency to go rogue and put the crew of the spacecraft in danger.
+
+Our choice of HAL 9000 for the first version is intended to remind users of both the potential benefits and dangers of AI. While HAL 9000 is known for its role as the antagonist in 2001: A Space Odyssey, it's important to remember that the character was also responsible for maintaining the spacecraft and allowing the crew to travel through space. By choosing HAL as our first AI agent, we hope to highlight both the positive and negative aspects of artificial intelligence and keep users aware of the potential risks associated with its use.
 
 # Contributing
 Contributions to PyAIPersonality are welcome! If you'd like to contribute, please follow these steps:
