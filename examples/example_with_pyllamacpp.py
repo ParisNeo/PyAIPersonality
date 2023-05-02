@@ -56,11 +56,11 @@ if __name__=="__main__":
 
     personality = AIPersonality("personalities_zoo/english/games/dundungeons and dragons game")
     full_context = personality.personality_conditioning+personality.link_text+personality.ai_message_prefix+personality.welcome_message if personality.welcome_message!="" else personality.personality_conditioning
-    model = Model(ggml_model=f'models/{url.split("/")[-1]}',
+    model = Model(model_path=f'models/{url.split("/")[-1]}',
                   prompt_context=full_context,
                   prompt_prefix=personality.link_text + personality.user_message_prefix + personality.link_text,
-                  prompt_suffix=personality.link_text + personality.ai_message_prefix + personality.link_text,
-                  anti_prompts=[personality.user_message_prefix, personality.ai_message_prefix])
+                  prompt_suffix=personality.link_text + personality.ai_message_prefix + personality.link_text
+                  )
     # If there is a disclaimer, show it
     if personality.disclaimer!="":
         print()
