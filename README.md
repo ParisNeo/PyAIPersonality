@@ -52,14 +52,11 @@ from pyllamacpp.model import Model
 if __name__=="__main__":
 
     personality = AIPersonality("personalities_zoo/english/general/gpt4all_chat_bot")
-    model = Model(ggml_model=r'<Your path to the ggml compatibe model>',
-                  prompt_context=personality.personality_conditioning+
-                  personality.link_text+
-                  personality.ai_message_prefix+
-                  personality.welcome_message,
+    model = Model(model_path=f'models/{url.split("/")[-1]}',
+                  prompt_context=full_context,
                   prompt_prefix=personality.link_text + personality.user_message_prefix + personality.link_text,
-                  prompt_suffix=personality.link_text + personality.ai_message_prefix + personality.link_text,
-                  anti_prompts=[personality.user_message_prefix, personality.ai_message_prefix])
+                  prompt_suffix=personality.link_text + personality.ai_message_prefix + personality.link_text
+                  )
     print(personality.welcome_message)
     while True:
         try:
