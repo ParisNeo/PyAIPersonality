@@ -19,17 +19,9 @@ if __name__=="__main__":
     # url = "https://huggingface.co/ParisNeo/GPT4All/resolve/main/gpt4all-lora-quantized-ggml.bin"
     # url = "https://huggingface.co/ParisNeo/GPT4All/resolve/main/gpt4all-lora-unfiltered-quantized.new.bin"
     # url = "https://huggingface.co/eachadea/legacy-ggml-vicuna-7b-4bit/resolve/main/ggml-vicuna-7b-4bit-rev1.bin"
-    # url = "https://huggingface.co/eachadea/ggml-vicuna-13b-4bit/resolve/main/ggml-vicuna-13b-4bit-rev1.bin"
+    url = "https://huggingface.co/eachadea/ggml-vicuna-13b-4bit/resolve/main/ggml-vicuna-13b-4bit-rev1.bin"
+    # You can add any llamacpp compatible model
 
-    # These ones can not be downloaded automaticaly, just download them using your browser and put them in models folder
-    # url = "https://gpt4all.io/models/ggml-gpt4all-j-v1.3-groovy.bin"
-    # url = "https://gpt4all.io/models/ggml-gpt4all-j-v1.2-jazzy.bin"
-    # url = "https://gpt4all.io/models/ggml-gpt4all-l13b-snoozy.bin"
-    # url = "https://gpt4all.io/models/ggml-gpt4all-j-v1.1-breezy.bin"
-    # url = "https://gpt4all.io/models/ggml-gpt4all-j.bin"
-    # url = "https://gpt4all.io/models/ggml-vicuna-7b-1.1-q4_2.bin"
-    url = "https://gpt4all.io/models/ggml-vicuna-13b-1.1-q4_2.bin"
-    
     model_name  = url.split("/")[-1]
     folder_path = Path("models/")
 
@@ -54,7 +46,7 @@ if __name__=="__main__":
             print("Error downloading file:", e)
             sys.exit(1)
 
-    personality = AIPersonality("personalities_zoo/english/games/dundungeons and dragons game")
+    personality = AIPersonality("personalities_zoo/english/generic/gpt4all")
     full_context = personality.personality_conditioning+personality.link_text+personality.ai_message_prefix+personality.welcome_message if personality.welcome_message!="" else personality.personality_conditioning
     model = Model(model_path=f'models/{url.split("/")[-1]}',
                   prompt_context=full_context,
@@ -77,8 +69,23 @@ if __name__=="__main__":
             if prompt == '':
                 continue
             print(f"{personality.name}:", end='')
-            for tok in model.generate(prompt):
-                print(f"{tok}", end='', flush=True)
+            output=""
+            for tok in model.generate(
+                            prompt, 
+                            n_predict=personality.model_n_predicts, 
+                            temp=personality.model_temperature,
+                            top_k=personality.model_top_k,
+                            top_p=personality.model_top_p,
+                            repeat_last_n=personality.model_repeat_last_n,
+                            repeat_penalty=personality.model_repeat_penalty
+                        ):
+                output += tok
+
+                # Use Hallucination suppression system
+                if personality.detect_antiprompt(output):
+                    break
+                else:
+                    print(f"{tok}", end='', flush=True)
             print()
         except KeyboardInterrupt:
             print("Keyboard interrupt detected.\nBye")
