@@ -7,6 +7,7 @@
 [![Discord](https://img.shields.io/discord/1092918764925882418?color=7289da&label=Discord&logo=discord&logoColor=ffffff)](https://discord.gg/4rR282WJb6)
 [![Follow me on Twitter](https://img.shields.io/twitter/follow/SpaceNerduino?style=social)](https://twitter.com/SpaceNerduino)
 [![Follow me on YouTube](https://img.shields.io/badge/Watch%20on-YouTube-red?style=flat&logo=youtube)](https://www.youtube.com/@Parisneo)
+[![PyPI](https://img.shields.io/pypi/v/pyaipersonality.svg)](https://pypi.org/project/pyaipersonality/)
 
 ## Current version : 0.0.4 (HAL9000)
 ## Main developer [ParisNeo](https://github.com/ParisNeo)
