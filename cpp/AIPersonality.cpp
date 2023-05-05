@@ -1,3 +1,9 @@
+/*
+* Cpp version of AIPersonality
+* Author : ParisNeo
+* NOTE: WORK  IN PROGRESS
+*/
+
 #include <iostream>
 #include <vector>
 #include <string>
