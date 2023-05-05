@@ -1,5 +1,13 @@
 # PyAIPersonality
 
+![GitHub license](https://img.shields.io/github/license/nomic-ai/GPT4All-ui)
+![GitHub issues](https://img.shields.io/github/issues/nomic-ai/GPT4All-ui)
+![GitHub stars](https://img.shields.io/github/stars/nomic-ai/GPT4All-ui)
+![GitHub forks](https://img.shields.io/github/forks/nomic-ai/GPT4All-ui)
+[![Discord](https://img.shields.io/discord/1092918764925882418?color=7289da&label=Discord&logo=discord&logoColor=ffffff)](https://discord.gg/4rR282WJb6)
+[![Twitter Follow](https://img.shields.io/twitter/follow/SpaceNerduino?style=social)](https://twitter.com/SpaceNerduino)
+[![Watch on YouTube](https://img.shields.io/badge/Watch%20on-YouTube-red?style=flat&logo=youtube)](https://www.youtube.com/@Parisneo)
+
 ## Current version : 0.0.4 (HAL9000)
 ## Main developer [ParisNeo](https://github.com/ParisNeo)
 
