@@ -1,6 +1,6 @@
 ## Changelog
 
-#### V 0.0.7 (GLaDOS)
+#### V 0.0.9 (GLaDOS)
 - Bugfixes and now the load_personality method can be used to reload the personality
 
 ##### Distribution name explanation

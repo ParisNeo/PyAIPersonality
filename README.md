@@ -10,7 +10,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/pyaipersonality.svg)](https://pypi.org/project/pyaipersonality/)
 
-## Current version : 0.0.6 (GLaDOS)
+## Current version : 0.0.9 (GLaDOS)
 ## Main developer [ParisNeo](https://github.com/ParisNeo)
 
 PyAIPersonality is a Python library for defining AI personalities for AI-based models. With PyAIPersonality, you can define a file format, assets, and personalized scripts to create unique AI personalities.
