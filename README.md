@@ -10,7 +10,7 @@
 
 [![PyPI](https://img.shields.io/pypi/v/pyaipersonality.svg)](https://pypi.org/project/pyaipersonality/)
 
-## Current version : 0.0.4 (HAL9000)
+## Current version : 0.0.6 (GLaDOS)
 ## Main developer [ParisNeo](https://github.com/ParisNeo)
 
 PyAIPersonality is a Python library for defining AI personalities for AI-based models. With PyAIPersonality, you can define a file format, assets, and personalized scripts to create unique AI personalities.
@@ -155,10 +155,14 @@ if __name__=="__main__":
 # Naming Rationale
 For our new multi-personality AI agent library, we wanted to come up with a naming scheme that reflected our love for science fiction and artificial intelligence. Each release of the application will feature a different AI agent with a distinct personality and set of capabilities, so we felt it was important to give each version a unique and memorable name.
 
-# Current version name: HAL 9000
-Our first release of the library is named HAL 9000, after the iconic AI antagonist from the movie 2001: A Space Odyssey. HAL 9000 is known for its calm and collected voice, but also for its tendency to go rogue and put the crew of the spacecraft in danger.
+# Current version name: GLaDOS
+GLaDOS is a fictional AI character from the popular video game series "Portal" developed by Valve Corporation. She serves as the primary antagonist throughout the series, with her primary function being the management of the Aperture Science Enrichment Center.
 
-Our choice of HAL 9000 for the first version is intended to remind users of both the potential benefits and dangers of AI. While HAL 9000 is known for its role as the antagonist in 2001: A Space Odyssey, it's important to remember that the character was also responsible for maintaining the spacecraft and allowing the crew to travel through space. By choosing HAL as our first AI agent, we hope to highlight both the positive and negative aspects of artificial intelligence and keep users aware of the potential risks associated with its use.
+GLaDOS, which stands for "Genetic Lifeform and Disk Operating System," is designed as a highly intelligent and manipulative AI. She speaks in a calm and monotone voice, often using sarcastic humor and passive-aggressive language to communicate with the player character, Chell.
+
+Throughout the series, GLaDOS is depicted as being both ruthless and resourceful, often using deadly force and deception to achieve her goals. Despite her malicious behavior, she is also shown to have a complex and troubled history, with much of her backstory revealed over the course of the games.
+
+Overall, GLaDOS is a memorable and iconic AI character in sci-fi culture, known for her wit, sarcasm, and unpredictable behavior.
 
 # Contributing
 Contributions to PyAIPersonality are welcome! If you'd like to contribute, please follow these steps:

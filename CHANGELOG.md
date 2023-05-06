@@ -1,6 +1,18 @@
 ## Changelog
 
-#### V 0.0.5
+#### V 0.0.7 (GLaDOS)
+- Bugfixes and now the load_personality method can be used to reload the personality
+
+##### Distribution name explanation
+GLaDOS is a fictional AI character from the popular video game series "Portal" developed by Valve Corporation. She serves as the primary antagonist throughout the series, with her primary function being the management of the Aperture Science Enrichment Center.
+
+GLaDOS, which stands for "Genetic Lifeform and Disk Operating System," is designed as a highly intelligent and manipulative AI. She speaks in a calm and monotone voice, often using sarcastic humor and passive-aggressive language to communicate with the player character, Chell.
+
+Throughout the series, GLaDOS is depicted as being both ruthless and resourceful, often using deadly force and deception to achieve her goals. Despite her malicious behavior, she is also shown to have a complex and troubled history, with much of her backstory revealed over the course of the games.
+
+Overall, GLaDOS is a memorable and iconic AI character in sci-fi culture, known for her wit, sarcasm, and unpredictable behavior.
+
+#### V 0.0.5 (Cortana)
 
 - Ability to add placeholders in the conditioning text that can be replaced with specific values using `replace_keys`.
 
@@ -94,3 +106,20 @@
     model_repeat_penalty: 1.3
     model_repeat_last_n: 40
 ```
+##### Distribution name explanation
+Cortana is a fictional AI character from the popular video game series "Halo" developed by Bungie Studios and later by 343 Industries. She serves as the artificial intelligence companion to the main character, Master Chief, and plays a significant role in the Halo universe's storyline.
+
+Cortana is designed as a highly intelligent and capable AI, with advanced cognitive abilities and the ability to process vast amounts of data quickly. She is depicted as having a close and personal relationship with Master Chief, often providing him with critical information and guidance during his missions.
+
+Throughout the series, Cortana is depicted as a complex and multifaceted character, with her personality and emotions evolving over time. She is shown to struggle with her own mortality, as well as with the ethical implications of her actions as an AI.
+
+Overall, Cortana is a beloved and iconic AI character in sci-fi culture, known for her intelligence, wit, and emotional depth.
+
+#### V 0.0.2 (HAL9000)
+- Main functionalities
+- Complete configuration file loading and saving
+- Assets folder for media assets
+
+Our first release of the library is named HAL 9000, after the iconic AI antagonist from the movie 2001: A Space Odyssey. HAL 9000 is known for its calm and collected voice, but also for its tendency to go rogue and put the crew of the spacecraft in danger.
+
+Our choice of HAL 9000 for the first version is intended to remind users of both the potential benefits and dangers of AI. While HAL 9000 is known for its role as the antagonist in 2001: A Space Odyssey, it's important to remember that the character was also responsible for maintaining the spacecraft and allowing the crew to travel through space. By choosing HAL as our first AI agent, we hope to highlight both the positive and negative aspects of artificial intelligence and keep users aware of the potential risks associated with its use.
