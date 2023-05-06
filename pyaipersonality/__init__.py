@@ -85,26 +85,32 @@ class AIPersonality:
             if not self.personality_package_path.is_dir():
                 raise ValueError("The provided path is not a folder.")
 
-            # Verify that there is at least a configuration file
-            config_file = self.personality_package_path / "config.yaml"
-            if not config_file.is_file():
-                raise ValueError("The provided folder does not contain a config.yaml file.")
-
             # Open and store the personality
-            self.load_personality(config_file)
+            self.load_personality(personality_package_path)
 
 
-    def load_personality(self, file_path):
+    def load_personality(self, package_path:Path|str=None):
         """
         Load the personality data from a YAML file and set it as attributes of the class.
 
         Parameters:
-        file_path (str or Path): The path to the YAML file containing the personality data.
+        file_path (str or Path): The path to the YAML file containing the personality data. 
+        If none, the current package path is used
 
         Returns:
         dict: A dictionary containing the personality data.
         """
-        with open(file_path, 'r', encoding='utf-8') as stream:
+        if package_path is None:
+            package_path = self.personality_package_path
+        else:
+            package_path = Path(package_path)
+        # Verify that there is at least a configuration file
+        config_file = package_path / "config.yaml"
+        if not config_file.exists():
+            raise ValueError(f"The provided folder {package_path} does not exist.")
+
+
+        with open(config_file, 'r', encoding='utf-8') as stream:
             config = yaml.safe_load(stream)
 
         # Set the personality attributes
@@ -114,6 +120,7 @@ class AIPersonality:
         # Rework the conditionning to add information
         self.personality_conditioning = self.replace_keys(self.personality_conditioning, self.Conditionning_commands)
 
+        self.personality_package_path = package_path
 
         # Check for a logo file
         logo_path = self.personality_package_path / "assets" / "logo.png"
@@ -225,5 +232,3 @@ class AIPersonality:
 
         output_string = re.sub(pattern, replace, input_string)
         return output_string
-    
-    
