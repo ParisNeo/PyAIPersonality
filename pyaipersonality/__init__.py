@@ -205,7 +205,27 @@ class AIPersonality:
         attrs = ',\n  '.join(attributes)
         return f"AIPersonality:\n  {attrs}"
     
+    def __dict__(self):
+        """
+        Create a dictionary representation of the AIPersonality instance.
 
+        Returns:
+        dict: A dictionary containing the attributes of the AIPersonality instance.
+        """
+        # Create a dictionary of the personality attributes
+        attributes = {key: value for key, value in self.__dict__.items() if not key.startswith("_")}
+
+        # Get the assets folder path
+        assets_path = self.personality_package_path / "assets"
+
+        # Get a list of all files in the assets folder
+        contents = [str(file) for file in assets_path.iterdir() if file.is_file()]
+
+        # Add the contents to the attributes dictionary
+        attributes["contents"] = contents
+
+        return attributes
+    
     # Helper functions
     @staticmethod
     def replace_keys(input_string, replacements):
