@@ -46,7 +46,7 @@ if __name__=="__main__":
             print("Error downloading file:", e)
             sys.exit(1)
 
-    personality = AIPersonality("personalities_zoo/english/generic/gpt4all")
+    personality = AIPersonality("personalities_zoo/english/internet/gpt4internet")
     model = Model(model_path=f'models/{url.split("/")[-1]}', n_ctx=2048)
     # If there is a disclaimer, show it
     if personality.disclaimer!="":
@@ -82,6 +82,11 @@ if __name__=="__main__":
                 else:
                     print(f"{tok}", end='', flush=True)
             print()
+            search = personality._processor.process_model_output(output)
+            if search is not None:
+                prompt += search
+            else:
+                print("Couldn't perform query (model not intelligent enough)")
         except KeyboardInterrupt:
             print("Keyboard interrupt detected.\nBye")
             break

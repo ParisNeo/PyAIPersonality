@@ -46,7 +46,7 @@ if __name__=="__main__":
             print("Error downloading file:", e)
             sys.exit(1)
 
-    personality = AIPersonality("personalities_zoo/english/generic/gpt4all")
+    personality = AIPersonality("personalities_zoo/english/internet/gpt4internetv0")
     model = Model(model_path=f'models/{url.split("/")[-1]}', n_ctx=2048)
     # If there is a disclaimer, show it
     if personality.disclaimer!="":
@@ -55,14 +55,19 @@ if __name__=="__main__":
         print(personality.disclaimer)
         print()
     
-
+    if personality.welcome_message:
+        print(personality.welcome_message)
     full_discussion = personality.personality_conditioning+personality.ai_message_prefix+personality.welcome_message+personality.link_text
     while True:
         try:
             prompt = input("You: ")
-            full_discussion+=personality.ai_message_prefix+prompt
             if prompt == '':
                 continue
+            preprocessed_prompt = personality.processor.process_model_input(prompt)
+            if preprocessed_prompt is not None:
+                full_discussion+=personality.ai_message_prefix+preprocessed_prompt
+            else:
+                full_discussion+=personality.ai_message_prefix+prompt
             print(f"{personality.name}:", end='')
             output=""
             for tok in model.generate(

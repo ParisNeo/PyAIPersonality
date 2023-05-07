@@ -28,3 +28,5 @@ user_message_prefix: 'prompt:
 user_name: user
 version: 1.0.0
 welcome_message: "Welcome to DnD. The best text game ever. Tell me how much players are there then tell me for each player, its role, and characteristic. I'll be the game master."
+# A list of texts to be used to detect that the model is hallucinating and stop the generation if any one of these is output by the model
+anti_prompts: ["prompt:","game_master:"]

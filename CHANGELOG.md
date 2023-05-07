@@ -1,11 +1,13 @@
 ## Changelog
 
-#### V 0.0.10 (GLaDOS)
+#### V 0.0.11 (GLaDOS)
 - Bugfixes and now the load_personality method can be used to reload the personality
 - Added serialization to json. You can do :
 ```python
-obj_dict = vars(obj)
+personality_dict = personality.as_dict()
 ```
+- Enhanced access using properties
+- Added the prossibility to use personal scripts to preprocess human input or post process ai output
 
 ##### Distribution name explanation
 GLaDOS is a fictional AI character from the popular video game series "Portal" developed by Valve Corporation. She serves as the primary antagonist throughout the series, with her primary function being the management of the Aperture Science Enrichment Center.
