@@ -13,7 +13,7 @@ ai_message_prefix: '# gpt4Internet:
   '
 author: ParisNeo
 category: internet
-dependencies: []
+dependencies: ['google-api-python-client']
 disclaimer: ''
 language: en_XX
 link_text: '
@@ -38,3 +38,8 @@ model_top_k: 5
 model_top_p: 0.98
 model_repeat_penalty: 1.0
 model_repeat_last_n: 60
+
+# Here are special configurations for the processor 
+processor_cfg:
+  Google_Search_Key: 0 # Put a google search key here
+  num_results: 1 #Number of results to analyze

@@ -15,6 +15,21 @@ import re
 from datetime import datetime
 import importlib
 
+import subprocess
+
+def install_package(package_name):
+    try:
+        # Check if the package is already installed
+        __import__(package_name)
+        print(f"{package_name} is already installed.")
+    except ImportError:
+        print(f"{package_name} is not installed. Installing...")
+        
+        # Install the package using pip
+        subprocess.check_call(["pip", "install", package_name])
+        
+        print(f"{package_name} has been successfully installed.")
+
 class AIPersonality:
 
     # Extra 
@@ -69,6 +84,8 @@ class AIPersonality:
         self._model_top_p: float = 0.95
         self._model_repeat_penalty: float = 1.3
         self._model_repeat_last_n: int = 40
+        
+        self._processor_cfg: dict = {}
 
         self._logo: Optional[Image.Image] = None
         self._processor = None
@@ -140,6 +157,10 @@ class AIPersonality:
         self._model_top_p = config.get("model_top_p", self._model_top_p)
         self._model_repeat_penalty = config.get("model_repeat_penalty", self._model_repeat_penalty)
         self._model_repeat_last_n = config.get("model_repeat_last_n", self._model_repeat_last_n)
+        
+        # Script parameters (for example keys to connect to search engine or any other usage)
+        self._processor_cfg = config.get("processor_cfg", self)
+        
 
         #set package path
         self.personality_package_path = package_path
@@ -172,13 +193,17 @@ class AIPersonality:
                 spec.loader.exec_module(processor_module)
 
                 # Set the _processor parameter to an instance of the Processor class
-                self._processor = processor_module.Processor()
+                self._processor = processor_module.Processor(self)
             except ImportError:
                 # Error occurred while importing the file or class
                 self._processor = None
         else:
             # If the file doesn't exist, set _processor to None
             self._processor = None
+            
+        #Install requirements
+        for entry in self._dependencies:
+            install_package(entry)
 
         if file_path.exists():
             module_name = file_name[:-3]  # Remove the ".py" extension
@@ -186,7 +211,7 @@ class AIPersonality:
             module = importlib.util.module_from_spec(module_spec)
             module_spec.loader.exec_module(module)
             if hasattr(module, "Processor"):
-                self._processor = module.Processor()
+                self._processor = module.Processor(self)
             else:
                 self._processor = None
         else:
@@ -641,7 +666,19 @@ class AIPersonality:
         self._processor = value
 
 
+    @property
+    def processor_cfg(self) -> list:
+        """Get the number of words to consider for repeat penalty."""
+        return self._processor_cfg
 
+    @processor.setter
+    def processor_cfg(self, value: dict):
+        """Set the number of words to consider for repeat penalty.
+
+        Args:
+            value (int): The new number of words value.
+        """
+        self._processor_cfg = value
 
     # ========================================== Helper methods ==========================================
     def detect_antiprompt(self, text:str) -> bool:

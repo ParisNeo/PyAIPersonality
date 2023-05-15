@@ -1,16 +1,24 @@
-from pyaipersonality import PAPScript
+from pyaipersonality import PAPScript, AIPersonality
 import urllib.parse
 import urllib.request
 import json
-#f"https://parisneo.pythonanywhere.com/search?&q={query}&max_results=1"
-def get_json_data(url, params=None):
-    if params:
-        encoded_params = urllib.parse.urlencode(params)
-        url = f"{url}?{encoded_params}"
+
+from googleapiclient.discovery import build
+
+def search_with_google_api(api_key, query, num_results):
+    # Create a service object for the Google Search API
+    service = build("customsearch", "v1", developerKey=api_key)
     
-    with urllib.request.urlopen(url) as response:
-        json_data = json.loads(response.read().decode())
-        return json_data
+    # Perform the search
+    response = service.cse().list(
+        cx='GPT4Internet',  # Paris neo custom search engine id
+        q=query,  # The search query
+        num=num_results  # The number of results to retrieve
+    ).execute()
+    
+    # Return the JSON response
+    return response
+
     
 class Processor(PAPScript):
     """
@@ -19,9 +27,13 @@ class Processor(PAPScript):
     Inherits from PAPScript.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
-        
+        self.personality = personality
+        # Verify your parameters
+        if not "Google_Search_Key" in self.personality._processor_cfg.keys() or self.personality._processor_cfg["Google_Search_Key"]==0:
+            print("No google search key is present. I won't be able to use internet search. Please set this in your personality parameters")
+
 
 
     def internet_search(self, query):
@@ -34,8 +46,10 @@ class Processor(PAPScript):
         Returns:
             dict: The search result as a dictionary.
         """
-        url = f"https://parisneo.pythonanywhere.com/search"
-        return get_json_data(url,{'q':f'{query}','max_results':f'{1}'})
+        return search_with_google_api(
+                                    self.personality.processor_cfg["Google_Search_Key"],
+                                    query, 
+                                    self.personality.processor_cfg["num_results"])
 
     def process_model_input(self, text):
         """
