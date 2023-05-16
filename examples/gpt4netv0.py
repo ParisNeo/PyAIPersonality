@@ -65,9 +65,9 @@ if __name__=="__main__":
                 continue
             preprocessed_prompt = personality.processor.process_model_input(prompt)
             if preprocessed_prompt is not None:
-                full_discussion+=personality.ai_message_prefix+preprocessed_prompt
+                full_discussion+=personality.user_message_prefix+preprocessed_prompt+personality.link_text+personality.ai_message_prefix
             else:
-                full_discussion+=personality.ai_message_prefix+prompt
+                full_discussion+=personality.user_message_prefix+preprocessed_prompt+personality.link_text+personality.ai_message_prefix
             print(f"{personality.name}:", end='')
             output=""
             for tok in model.generate(

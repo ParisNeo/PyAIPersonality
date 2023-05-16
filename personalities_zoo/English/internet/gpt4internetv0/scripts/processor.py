@@ -3,23 +3,71 @@ import urllib.parse
 import urllib.request
 import json
 
-from googleapiclient.discovery import build
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
 
-def search_with_google_api(api_key, query, num_results):
-    # Create a service object for the Google Search API
-    service = build("customsearch", "v1", developerKey=api_key)
-    
-    # Perform the search
-    response = service.cse().list(
-        cx='GPT4Internet',  # Paris neo custom search engine id
-        q=query,  # The search query
-        num=num_results  # The number of results to retrieve
-    ).execute()
-    
-    # Return the JSON response
-    return response
+def extract_results(url, max_num):
+    # Configure Chrome options
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")  # Run Chrome in headless mode
 
-    
+    # Set path to chromedriver executable (replace with your own path)
+    chromedriver_path = "path/to/chromedriver"
+
+    # Create a new Chrome webdriver instance
+    driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
+
+    # Load the webpage
+    driver.get(url)
+
+    # Wait for JavaScript to execute and get the final page source
+    html_content = driver.page_source
+
+    # Close the browser
+    driver.quit()
+
+    # Parse the HTML content
+    soup = BeautifulSoup(html_content, "html.parser")
+
+    # Find the <ol> tag with class="react-results--main"
+    ol_tag = soup.find("ol", class_="react-results--main")
+
+    # Initialize an empty list to store the results
+    results_list = []
+
+    # Find all <li> tags within the <ol> tag
+    li_tags = ol_tag.find_all("li")
+
+    # Loop through each <li> tag, limited by max_num
+    for index, li_tag in enumerate(li_tags):
+        if index >= max_num:
+            break
+
+        try:
+            # Find the three <div> tags within the <article> tag
+            div_tags = li_tag.find_all("div")
+
+            # Extract the link, title, and content from the <div> tags
+            links = div_tags[0].find_all("a")
+            span = links[1].find_all("span")
+            link = span[0].text.strip()
+
+            title = div_tags[2].text.strip()
+            content = div_tags[3].text.strip()
+
+            # Add the extracted information to the list
+            results_list.append({
+                "link": link,
+                "title": title,
+                "content": content
+            })
+        except Exception:
+            pass
+
+    return results_list
+
+   
 class Processor(PAPScript):
     """
     A class that processes model inputs and outputs.
@@ -30,12 +78,8 @@ class Processor(PAPScript):
     def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
         self.personality = personality
-        # Verify your parameters
-        if not "Google_Search_Key" in self.personality._processor_cfg.keys() or self.personality._processor_cfg["Google_Search_Key"]==0:
-            print("No google search key is present. I won't be able to use internet search. Please set this in your personality parameters")
 
-
-
+    
     def internet_search(self, query):
         """
         Perform an internet search using the provided query.
@@ -46,10 +90,17 @@ class Processor(PAPScript):
         Returns:
             dict: The search result as a dictionary.
         """
-        return search_with_google_api(
-                                    self.personality.processor_cfg["Google_Search_Key"],
-                                    query, 
-                                    self.personality.processor_cfg["num_results"])
+        formatted_text = ""
+        results = extract_results(f"https://duckduckgo.com/?q={query}&t=h_&ia=web", self.personality._processor_cfg["num_results"])
+        for result in results:
+            title = result["title"]
+            content = result["content"]
+            link = result["link"]
+            formatted_text += f"- {title}: {content}\n{link}\n\n"
+
+        print("Searchengine results : ")
+        print(formatted_text)
+        return formatted_text
 
     def process_model_input(self, text):
         """
@@ -64,7 +115,7 @@ class Processor(PAPScript):
             None: Currently, this method returns None.
         """
 
-        return "Summerize :\n" + str(self.internet_search(text))
+        return "### Search engine:\n"+str(self.internet_search(text))+"### Human:\n"+text
 
     def process_model_output(self, text):
         """

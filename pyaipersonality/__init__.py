@@ -16,6 +16,15 @@ from datetime import datetime
 import importlib
 
 import subprocess
+import pkg_resources
+
+def is_package_installed(package_name):
+    try:
+        dist = pkg_resources.get_distribution(package_name)
+        return True
+    except pkg_resources.DistributionNotFound:
+        return False
+    
 
 def install_package(package_name):
     try:
@@ -135,6 +144,14 @@ class AIPersonality:
         with open(config_file, "r") as f:
             config = yaml.safe_load(f)
 
+        secret_file = package_path / "secret.yaml"
+        if secret_file.exists():
+            with open(secret_file, "r") as f:
+                self._secret_cfg = yaml.safe_load(f)
+        else:
+            self._secret_cfg = None
+
+
         # Load parameters from the configuration file
         self._version = config.get("version", self._version)
         self._author = config.get("author", self._author)
@@ -159,7 +176,7 @@ class AIPersonality:
         self._model_repeat_last_n = config.get("model_repeat_last_n", self._model_repeat_last_n)
         
         # Script parameters (for example keys to connect to search engine or any other usage)
-        self._processor_cfg = config.get("processor_cfg", self)
+        self._processor_cfg = config.get("processor_cfg", self._processor_cfg)
         
 
         #set package path
@@ -203,7 +220,8 @@ class AIPersonality:
             
         #Install requirements
         for entry in self._dependencies:
-            install_package(entry)
+            if not is_package_installed(entry):
+                install_package(entry)
 
         if file_path.exists():
             module_name = file_name[:-3]  # Remove the ".py" extension
