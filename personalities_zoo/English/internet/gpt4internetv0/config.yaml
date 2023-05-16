@@ -26,9 +26,9 @@ personality_description: 'gpt4Internet is an internet search tool that can summe
 user_message_prefix: ''
 user_name: user
 version: 1.0.0
-welcome_message: 'Hi I am smart internet search tool. Issue your seach query and I'll search the net for outut then I'll summerize it.
+welcome_message: 'Hi I am smart internet search tool. Issue your seach query and I''ll search the net for outut then I''ll summerize it.
 
-  ''
+  '
 anti_prompts: ["### Human", "### gpt4Internet", "### Assistant", "### Search engine:"]
 
 # Here are default model parameters
