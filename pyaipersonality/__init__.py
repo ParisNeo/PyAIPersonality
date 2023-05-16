@@ -18,6 +18,8 @@ import importlib
 import subprocess
 import pkg_resources
 
+
+
 def is_package_installed(package_name):
     try:
         dist = pkg_resources.get_distribution(package_name)
@@ -38,6 +40,54 @@ def install_package(package_name):
         subprocess.check_call(["pip", "install", package_name])
         
         print(f"{package_name} has been successfully installed.")
+
+
+
+class PAPScript:
+    """
+    Template class for implementing personality processor classes in the PAPScript framework.
+
+    This class provides a basic structure and placeholder methods for processing model inputs and outputs.
+    Personality-specific processor classes should inherit from this class and override the necessary methods.
+
+    Methods:
+        process_model_input(text): Process the model input.
+        process_model_output(text): Process the model output.
+    """
+    def __init__(self) -> None:
+        pass
+
+    def process_model_input(self, text):
+        """
+        Process the model input.
+
+        This method should be overridden in the personality-specific processor class to define
+        the desired behavior for processing the model input.
+
+        Args:
+            text (str): The model input text.
+
+        Returns:
+            Any: The processed model input.
+        """
+        return None
+
+    def process_model_output(self, text):
+        """
+        Process the model output.
+
+        This method should be overridden in the personality-specific processor class to define
+        the desired behavior for processing the model output.
+
+        Args:
+            text (str): The model output text.
+
+        Returns:
+            Any: The processed model output.
+        """
+        return None
+
+
 
 class AIPersonality:
 
@@ -670,12 +720,12 @@ class AIPersonality:
         self._assets_list = value
 
     @property
-    def processor(self) -> list:
+    def processor(self) -> PAPScript:
         """Get the number of words to consider for repeat penalty."""
         return self._processor
 
     @processor.setter
-    def processor(self, value: list):
+    def processor(self, value: PAPScript):
         """Set the number of words to consider for repeat penalty.
 
         Args:
@@ -776,49 +826,4 @@ class AIPersonality:
 
         output_string = re.sub(pattern, replace, input_string)
         return output_string
-
-
-class PAPScript:
-    """
-    Template class for implementing personality processor classes in the PAPScript framework.
-
-    This class provides a basic structure and placeholder methods for processing model inputs and outputs.
-    Personality-specific processor classes should inherit from this class and override the necessary methods.
-
-    Methods:
-        process_model_input(text): Process the model input.
-        process_model_output(text): Process the model output.
-    """
-    def __init__(self) -> None:
-        pass
-
-    def process_model_input(self, text):
-        """
-        Process the model input.
-
-        This method should be overridden in the personality-specific processor class to define
-        the desired behavior for processing the model input.
-
-        Args:
-            text (str): The model input text.
-
-        Returns:
-            Any: The processed model input.
-        """
-        return None
-
-    def process_model_output(self, text):
-        """
-        Process the model output.
-
-        This method should be overridden in the personality-specific processor class to define
-        the desired behavior for processing the model output.
-
-        Args:
-            text (str): The model output text.
-
-        Returns:
-            Any: The processed model output.
-        """
-        return None
 
