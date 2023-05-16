@@ -40,7 +40,7 @@ def extract_results(url, max_num):
 
     # Loop through each <li> tag, limited by max_num
     for index, li_tag in enumerate(li_tags):
-        if index >= max_num:
+        if index > max_num:
             break
 
         try:
