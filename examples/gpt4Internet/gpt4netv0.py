@@ -1,5 +1,5 @@
 from pyaipersonality import AIPersonality
-from pyllamacpp.model import Model
+from llama_cpp import Llama
 
 from pathlib import Path
 import urllib.request
@@ -7,19 +7,17 @@ import sys
 import os
 
 from tqdm import tqdm
+import random
 
-# You need to install pyllamacpp from pypi:
-# pip install pyllamacpp
+# You need to install llama-cpp-python from pypi:
+# pip install llama-cpp-python
 
 if __name__=="__main__":
 
     # choose your model
     # undomment the model you want to use
     # These models can be automatically downloaded
-    # url = "https://huggingface.co/ParisNeo/GPT4All/resolve/main/gpt4all-lora-quantized-ggml.bin"
-    # url = "https://huggingface.co/ParisNeo/GPT4All/resolve/main/gpt4all-lora-unfiltered-quantized.new.bin"
-    # url = "https://huggingface.co/eachadea/legacy-ggml-vicuna-7b-4bit/resolve/main/ggml-vicuna-7b-4bit-rev1.bin"
-    url = "https://huggingface.co/eachadea/ggml-vicuna-13b-4bit/resolve/main/ggml-vicuna-13b-4bit-rev1.bin"
+    url = "https://huggingface.co/TheBloke/Wizard-Vicuna-7B-Uncensored-GGML/resolve/main/Wizard-Vicuna-7B-Uncensored.ggmlv2.q4_0.bin"
     # You can add any llamacpp compatible model
 
     model_name  = url.split("/")[-1]
@@ -47,7 +45,13 @@ if __name__=="__main__":
             sys.exit(1)
 
     personality = AIPersonality("personalities_zoo/english/internet/gpt4internetv0")
-    model = Model(model_path=f'models/{url.split("/")[-1]}', n_ctx=2048)
+    model = Llama(
+            model_path=f'models/{url.split("/")[-1]}',
+            n_ctx=2048, 
+            n_gpu_layers=40, 
+            seed=random.randint(1, 2**31)
+            )
+
     # If there is a disclaimer, show it
     if personality.disclaimer!="":
         print()
@@ -57,6 +61,7 @@ if __name__=="__main__":
     
     if personality.welcome_message:
         print(personality.welcome_message)
+
     full_discussion = personality.personality_conditioning+personality.ai_message_prefix+personality.welcome_message+personality.link_text
     while True:
         try:
@@ -70,22 +75,27 @@ if __name__=="__main__":
                 full_discussion+=personality.user_message_prefix+preprocessed_prompt+personality.link_text+personality.ai_message_prefix
             print(f"{personality.name}:", end='')
             output=""
+            model.reset()
+            tokens = model.tokenize(full_discussion.encode())
+            count = 0
             for tok in model.generate(
-                            full_discussion, 
-                            n_predict=personality.model_n_predicts, 
+                            tokens, 
                             temp=personality.model_temperature,
                             top_k=personality.model_top_k,
                             top_p=personality.model_top_p,
-                            repeat_last_n=personality.model_repeat_last_n,
                             repeat_penalty=personality.model_repeat_penalty
                         ):
-                output += tok
+                if count >= personality.model_n_predicts or (tok == model.token_eos()):
+                    break
+                word = model.detokenize([tok]).decode()
+                count += 1
+                output += word
 
                 # Use Hallucination suppression system
                 if personality.detect_antiprompt(output):
                     break
                 else:
-                    print(f"{tok}", end='', flush=True)
+                    print(f"{word}", end='', flush=True)
             print()
         except KeyboardInterrupt:
             print("Keyboard interrupt detected.\nBye")

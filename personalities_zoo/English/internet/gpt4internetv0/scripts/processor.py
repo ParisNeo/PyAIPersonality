@@ -29,6 +29,12 @@ def extract_results(url, max_num):
 
     # Parse the HTML content
     soup = BeautifulSoup(html_content, "html.parser")
+    
+    # Detect that no outputs are found
+    Not_found = soup.find("No results found")
+
+    if Not_found : 
+        return []    
 
     # Find the <ol> tag with class="react-results--main"
     ol_tag = soup.find("ol", class_="react-results--main")
