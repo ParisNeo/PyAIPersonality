@@ -147,7 +147,7 @@ class Processor(PAPScript):
         search_result = self.internet_search(search_query)
         if step_callback is not None:
             step_callback(search_result, 2)
-        prompt = f"### Instruction:\nUse Search engine output to answer Human question\nquestion:\n{search_query}\nsearch results:\n{search_result}\nsummary:\n"
+        prompt = f"### Instruction:\nUse Search engine output to answer Human question. Show sources as links using markdown format.\nquestion:\n{search_query}\nsearch results:\n{search_result}\nsummary:\n"
         print(prompt)
         output = generate_fn(prompt, partial(process,bot_says=bot_says))
         if step_callback is not None:
