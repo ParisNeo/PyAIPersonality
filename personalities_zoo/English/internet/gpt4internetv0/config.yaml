@@ -41,4 +41,7 @@ model_repeat_last_n: 60
 
 # Here are special configurations for the processor 
 processor_cfg:
-  num_results: 3 #Number of results to analyze
+  custom_workflow: false
+  process_model_input: true
+  process_model_output: false
+  num_results: 4 #Number of results to analyze

@@ -7,6 +7,11 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 
+
+def format_url_parameter(value:str):
+    encoded_value = value.strip().replace("\"","")
+    return encoded_value
+
 def extract_results(url, max_num):
     # Configure Chrome options
     chrome_options = Options()
@@ -29,7 +34,7 @@ def extract_results(url, max_num):
 
     # Parse the HTML content
     soup = BeautifulSoup(html_content, "html.parser")
-    
+
     # Detect that no outputs are found
     Not_found = soup.find("No results found")
 
@@ -97,7 +102,7 @@ class Processor(PAPScript):
             dict: The search result as a dictionary.
         """
         formatted_text = ""
-        results = extract_results(f"https://duckduckgo.com/?q={query}&t=h_&ia=web", self.personality._processor_cfg["num_results"])
+        results = extract_results(f"https://duckduckgo.com/?q={format_url_parameter(query)}&t=h_&ia=web", self.personality._processor_cfg["num_results"])
         for result in results:
             title = result["title"]
             content = result["content"]

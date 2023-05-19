@@ -1,10 +1,18 @@
-import requests
-from pyaipersonality import PAPScript
-
+from pyaipersonality import PAPScript, AIPersonality
+import urllib.parse
+import urllib.request
+import json
+import time
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+from functools import partial
+
+
+def format_url_parameter(value:str):
+    encoded_value = value.strip().replace("\"","")
+    return encoded_value
 
 def extract_results(url, max_num):
     # Configure Chrome options
@@ -12,7 +20,7 @@ def extract_results(url, max_num):
     chrome_options.add_argument("--headless")  # Run Chrome in headless mode
 
     # Set path to chromedriver executable (replace with your own path)
-    chromedriver_path = "path/to/chromedriver"
+    chromedriver_path = ""
 
     # Create a new Chrome webdriver instance
     driver = webdriver.Chrome(executable_path=chromedriver_path, options=chrome_options)
@@ -28,6 +36,12 @@ def extract_results(url, max_num):
 
     # Parse the HTML content
     soup = BeautifulSoup(html_content, "html.parser")
+
+    # Detect that no outputs are found
+    Not_found = soup.find("No results found")
+
+    if Not_found : 
+        return []    
 
     # Find the <ol> tag with class="react-results--main"
     ol_tag = soup.find("ol", class_="react-results--main")
@@ -66,7 +80,7 @@ def extract_results(url, max_num):
 
     return results_list
 
-
+   
 class Processor(PAPScript):
     """
     A class that processes model inputs and outputs.
@@ -74,9 +88,11 @@ class Processor(PAPScript):
     Inherits from PAPScript.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
+        self.personality = personality
 
+    
     def internet_search(self, query):
         """
         Perform an internet search using the provided query.
@@ -88,7 +104,7 @@ class Processor(PAPScript):
             dict: The search result as a dictionary.
         """
         formatted_text = ""
-        results = extract_results(f"https://duckduckgo.com/?q={query}&t=h_&ia=web", self.personality._processor_cfg["num_results"])
+        results = extract_results(f"https://duckduckgo.com/?q={format_url_parameter(query)}&t=h_&ia=web", self.personality._processor_cfg["num_results"])
         for result in results:
             title = result["title"]
             content = result["content"]
@@ -99,38 +115,34 @@ class Processor(PAPScript):
         print(formatted_text)
         return formatted_text
 
-    def process_model_input(self, text):
+    def run_workflow(self, generate_fn, prompt, previous_discussion_text=""):
         """
-        Process the model input.
+        Runs the workflow for processing the model input and output.
 
-        Currently, this method returns None.
+        This method should be called to execute the processing workflow.
 
         Args:
-            text (str): The model input text.
+            generate_fn (function): A function that generates model output based on the input prompt.
+                The function should take a single argument (prompt) and return the generated text.
+            prompt (str): The input prompt for the model.
+            previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
 
         Returns:
-            None: Currently, this method returns None.
+            None
         """
-        return None
+        bot_says = ""
+        def process(text, bot_says):
+            bot_says = bot_says + text
+            if self.personality.detect_antiprompt(bot_says):
+                return False
+            else:
+                return True
 
-    def process_model_output(self, text):
-        """
-        Process the model output.
+        # 1 first ask the model to formulate a query
+        text = generate_fn(f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\nsearch_query:", partial(process,bot_says=bot_says))
+        search_result = self.internet_search(format_url_parameter(text))
+        output = generate_fn("### Instruction:\nAnswer question about search results\nsearch results:\n"+str(search_result)+"question:\n"+prompt+"answer:", partial(process,bot_says=bot_says))
 
-        If the output contains a search query, perform an internet search.
 
-        Args:
-            text (str): The model output text.
 
-        Returns:
-            dict or None: The search result as a dictionary if a search query is found,
-                otherwise returns None.
-        """
-        sequence = "search_query:"
-        index = text.find(sequence)
-        if index != -1:
-            query = text[index + len(sequence):]
-            search_result = self.internet_search(query)
-            return search_result
-        else:
-            return None
+

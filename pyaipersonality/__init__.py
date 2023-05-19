@@ -51,11 +51,69 @@ class PAPScript:
     Personality-specific processor classes should inherit from this class and override the necessary methods.
 
     Methods:
-        process_model_input(text): Process the model input.
-        process_model_output(text): Process the model output.
+        __init__():
+            Initializes the PAPScript object.
+
+        run_workflow(generate_fn, prompt):
+            Runs the workflow for processing the model input and output.
+
+        process_model_input(text):
+            Process the model input.
+
+        process_model_output(text):
+            Process the model output.
+
+    Attributes:
+        None
+
+    Usage:
+    ```
+    # Create a personality-specific processor class that inherits from PAPScript
+    class MyPersonalityProcessor(PAPScript):
+        def __init__(self):
+            super().__init__()
+
+        def process_model_input(self, text):
+            # Implement the desired behavior for processing the model input
+            # and return the processed model input
+
+        def process_model_output(self, text):
+            # Implement the desired behavior for processing the model output
+            # and return the processed model output
+
+    # Create an instance of the personality processor
+    my_processor = MyPersonalityProcessor()
+
+    # Define the generate function and prompt
+    def generate_fn(prompt):
+        # Implement the logic to generate model output based on the prompt
+        # and return the generated text
+
+    prompt = "Enter your input: "
+
+    # Run the workflow
+    my_processor.run_workflow(generate_fn, prompt)
+    ```
     """
     def __init__(self) -> None:
         pass
+
+    def run_workflow(self, generate_fn, prompt, previous_discussion_text=""):
+        """
+        Runs the workflow for processing the model input and output.
+
+        This method should be called to execute the processing workflow.
+
+        Args:
+            generate_fn (function): A function that generates model output based on the input prompt.
+                The function should take a single argument (prompt) and return the generated text.
+            prompt (str): The input prompt for the model.
+            previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
+
+        Returns:
+            None
+        """
+        return None
 
     def process_model_input(self, text):
         """
@@ -739,7 +797,7 @@ class AIPersonality:
         """Get the number of words to consider for repeat penalty."""
         return self._processor_cfg
 
-    @processor.setter
+    @processor_cfg.setter
     def processor_cfg(self, value: dict):
         """Set the number of words to consider for repeat penalty.
 

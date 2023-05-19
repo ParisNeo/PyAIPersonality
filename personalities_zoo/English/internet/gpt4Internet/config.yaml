@@ -45,3 +45,10 @@ model_top_k: 5
 model_top_p: 0.98
 model_repeat_penalty: 1.0
 model_repeat_last_n: 60
+
+# Here are special configurations for the processor 
+processor_cfg:
+  custom_workflow: true
+  process_model_input: false
+  process_model_output: false
+  num_results: 3 #Number of results to analyze
