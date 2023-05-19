@@ -98,7 +98,7 @@ class PAPScript:
     def __init__(self) -> None:
         pass
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text=""):
+    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
         """
         Runs the workflow for processing the model input and output.
 

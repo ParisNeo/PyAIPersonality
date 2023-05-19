@@ -6,9 +6,9 @@ import json
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
+from urllib.parse import quote
 
-
-def format_url_parameter(value:str):
+def format_url_parameter(value):
     encoded_value = value.strip().replace("\"","")
     return encoded_value
 
@@ -113,7 +113,7 @@ class Processor(PAPScript):
         print(formatted_text)
         return formatted_text
 
-    def process_model_input(self, text):
+    def process_model_input(self, search_query):
         """
         Process the model input.
 
@@ -125,8 +125,8 @@ class Processor(PAPScript):
         Returns:
             None: Currently, this method returns None.
         """
-
-        return "### Search engine:\n"+str(self.internet_search(text))+"### Human:\n"+text
+        
+        return "question:\n"+search_query+"\nsearch results:\n"+self.internet_search(search_query)+"\nsummary:\n"
 
     def process_model_output(self, text):
         """

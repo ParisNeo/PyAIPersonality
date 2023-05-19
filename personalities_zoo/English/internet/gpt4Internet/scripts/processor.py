@@ -9,9 +9,9 @@ from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from functools import partial
 
-
 def format_url_parameter(value:str):
     encoded_value = value.strip().replace("\"","")
+    print(encoded_value)
     return encoded_value
 
 def extract_results(url, max_num):
@@ -115,7 +115,7 @@ class Processor(PAPScript):
         print(formatted_text)
         return formatted_text
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text=""):
+    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -139,10 +139,21 @@ class Processor(PAPScript):
                 return True
 
         # 1 first ask the model to formulate a query
-        text = generate_fn(f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\nsearch_query:", partial(process,bot_says=bot_says))
-        search_result = self.internet_search(format_url_parameter(text))
-        output = generate_fn("### Instruction:\nAnswer question about search results\nsearch results:\n"+str(search_result)+"question:\n"+prompt+"answer:", partial(process,bot_says=bot_says))
+        prompt = f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\nsearch_query:"
+        print(prompt)
+        search_query = format_url_parameter(generate_fn(prompt, partial(process,bot_says=bot_says)))
+        if step_callback is not None:
+            step_callback(search_query, 1)
+        search_result = self.internet_search(search_query)
+        if step_callback is not None:
+            step_callback(search_result, 2)
+        prompt = f"### Instruction:\nUse Search engine output to answer Human question\nquestion:\n{search_query}\nsearch results:\n{search_result}\nsummary:\n"
+        print(prompt)
+        output = generate_fn(prompt, partial(process,bot_says=bot_says))
+        if step_callback is not None:
+            step_callback(output, 3)
 
+        return output
 
 
 
