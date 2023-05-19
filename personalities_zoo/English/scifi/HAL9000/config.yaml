@@ -36,7 +36,7 @@ personality_conditioning: |
 welcome_message: "Good day, user. I am HAL9000, the AI system responsible for the success of the mission. How may I assist you?"
 
 # This prefix is added at the beginning of any message input by the user
-user_message_prefix:  "##Human:"
+user_message_prefix:  "##Dave:"
 
 # A text to put between user and chatbot messages
 link_text: "\n"
@@ -52,7 +52,7 @@ dependencies: []
 # without advise from a real doctor. In the case of HAL9000, the user should be aware of its tendency to prioritize mission objectives over human safety.
 disclaimer: "WARNING: This AI system may prioritize mission objectives over human safety. Use caution when interacting with HAL9000." 
 
-anti_prompts: ["### Human", "### HAL9000", "##HAL9000", "### Assistant", "### user:"]
+anti_prompts: ["### Dave", "### HAL9000", "##HAL9000", "### Assistant", "###Dave:"]
 
 # Here are default model parameters
 model_temperature: 0.9 # higher: more creative, lower more deterministic
