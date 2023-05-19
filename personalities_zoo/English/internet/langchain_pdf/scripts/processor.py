@@ -1,0 +1,76 @@
+from pyaipersonality import PAPScript, AIPersonality
+import urllib.parse
+import urllib.request
+import json
+import time
+from PyPDF2 import PdfReader
+from py
+
+from langchain.text_splitter import RecursiveCharacterTextSplitter 
+from langchain.embeddings.llamacpp import LlamaCppEmbeddings
+from langchain.vectorstores import FAISS
+from langchain.chains.question_answering import load_qa_chain
+from langchain.base_language import BaseLanguageModel
+from langchain.schema import BaseMessage, LLMResult, PromptValue, get_buffer_string
+from typing import List, Optional, Sequence, Set
+from langchain.llms import LlamaCpp
+from langchain.callbacks.manager import Callbacks
+
+class Processor(PAPScript):
+    """
+    A class that processes model inputs and outputs.
+
+    Inherits from PAPScript.
+    """
+
+    def __init__(self, personality: AIPersonality) -> None:
+        super().__init__()
+        self.personality = personality
+        self.pdf =  PdfReader(self.personality._processor_cfg["pdf_file_path"])
+        text = ""
+        for page in self.pdf.pages:
+            text += page.extract_text()
+
+        self.text_splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            chunk_overlap=200,
+            length_function=len
+        )
+        self.chunks = self.text_splitter.split_text(text=text)
+        print("Vectorizing document")
+        self.emb = LlamaCppEmbeddings(model_path="models/llama_cpp_official/Wizard-Vicuna-7B-Uncensored.ggmlv2.q4_0.bin", em)
+        
+        if 
+        self.vector_store = FAISS.from_texts(self.chunks, embedding=self.emb)
+        print("Vectorization done successfully")
+
+
+
+    
+
+    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
+        """
+        Runs the workflow for processing the model input and output.
+
+        This method should be called to execute the processing workflow.
+
+        Args:
+            generate_fn (function): A function that generates model output based on the input prompt.
+                The function should take a single argument (prompt) and return the generated text.
+            prompt (str): The input prompt for the model.
+            previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
+
+        Returns:
+            None
+        """
+        output =""
+        docs = self.vector_store.similarity_search(prompt, k=3)
+        chain = load_qa_chain(llm=LlamaCpp(model_path="models/llama_cpp_official/Wizard-Vicuna-7B-Uncensored.ggmlv2.q4_0.bin"), chain_type="stuff")
+        response = chain.run(input_documents=docs, question=prompt)
+        print(f"response: {response}")
+
+
+        return output
+
+
+
