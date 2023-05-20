@@ -114,7 +114,7 @@ class Processor(PAPScript):
 
         print("Searchengine results : ")
         print(formatted_text)
-        return formatted_text
+        return formatted_text, results
 
     def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
         """
@@ -142,17 +142,23 @@ class Processor(PAPScript):
                 return True
 
         # 1 first ask the model to formulate a query
-        prompt = f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\n### Optimized search query:"
+        prompt = f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\n### Optimized search query:\n"
         print(prompt)
-        search_query = format_url_parameter(generate_fn(prompt, partial(process,bot_says=bot_says)))
+        search_query = format_url_parameter(generate_fn(prompt, self.personality._processor_cfg["max_query_size"], partial(process,bot_says=bot_says)))
         if step_callback is not None:
             step_callback(search_query, 1)
-        search_result = self.internet_search(search_query)
+        search_result, results = self.internet_search(search_query)
         if step_callback is not None:
             step_callback(search_result, 2)
-        prompt = f"### Instruction:\nUse Search engine output to answer Human question. \nquestion:\n{search_query}\n### Search results:\n{search_result}\n### Summary with markdown style citation links:\n"
+        prompt = f"### Instruction:\nUse Search engine output to answer Human question. \nquestion:\n{search_query}\n### Search results:\n{search_result}\n### Single paragraph summary:\n"
         print(prompt)
-        output = generate_fn(prompt, partial(process,bot_says=bot_says))
+        output = generate_fn(prompt, self.personality._processor_cfg["max_summery_size"], partial(process, bot_says=bot_says))
+        sources_text = "\n# Sources :\n"
+        for result in results:
+            link = result["link"]
+            sources_text += f"[source : {link}]({link})\n\n"
+
+        output = output+sources_text
         if step_callback is not None:
             step_callback(output, 3)
 
