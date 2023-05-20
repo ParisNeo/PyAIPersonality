@@ -182,6 +182,7 @@ class AIPersonality:
         self._personality_description: str = "This personality is a helpful and Kind AI ready to help you solve your problems"
         self._personality_conditioning: str = "GPT4All is a smart and helpful Assistant built by Nomic-AI. It can discuss with humans and assist them.\nDate: {{date}}"
         self._welcome_message: str = "Welcome! I am GPT4All A free and open assistant. What can I do for you today?"
+        self._include_welcome_message_in_disucssion: bool = True
         self._user_message_prefix: str = "### Human:"
         self._link_text: str = "\n"
         self._ai_message_prefix: str = "### Assistant:"
@@ -270,6 +271,8 @@ class AIPersonality:
         self._personality_description = config.get("personality_description", self._personality_description)
         self._personality_conditioning = config.get("personality_conditioning", self._personality_conditioning)
         self._welcome_message = config.get("welcome_message", self._welcome_message)
+        self._include_welcome_message_in_disucssion = config.get("include_welcome_message_in_disucssion", self._include_welcome_message_in_disucssion)
+
         self._user_message_prefix = config.get("user_message_prefix", self._user_message_prefix)
         self._link_text = config.get("link_text", self._link_text)
         self._ai_message_prefix = config.get("ai_message_prefix", self._ai_message_prefix)
@@ -291,49 +294,47 @@ class AIPersonality:
         self.personality_package_path = package_path
 
         # Check for a logo file
-        logo_path = self.personality_package_path / "assets" / "logo.png"
-        if logo_path.is_file():
-            self._logo = Image.open(logo_path)
+        self.logo_path = self.personality_package_path / "assets" / "logo.png"
+        if self.logo_path.is_file():
+            self._logo = Image.open(self.logo_path)
 
         # Get the assets folder path
-        assets_path = self.personality_package_path / "assets"
+        self.assets_path = self.personality_package_path / "assets"
         # Get the scripts folder path
-        scripts_path = self.personality_package_path / "scripts"
+        self.scripts_path = self.personality_package_path / "scripts"
         
         # If not exist recreate
-        assets_path.mkdir(parents=True, exist_ok=True)
+        self.assets_path.mkdir(parents=True, exist_ok=True)
 
         # If not exist recreate
-        scripts_path.mkdir(parents=True, exist_ok=True)
+        self.scripts_path.mkdir(parents=True, exist_ok=True)
 
-        # Search for any processor code
-        file_name = "processor.py"
-        file_path = scripts_path / file_name
 
-        if file_path.exists():
-            # If the file exists, import the Processor class
-            try:
-                spec = importlib.util.spec_from_file_location("processor_module", file_path)
-                processor_module = importlib.util.module_from_spec(spec)
-                spec.loader.exec_module(processor_module)
-
-                # Set the _processor parameter to an instance of the Processor class
-                self._processor = processor_module.Processor(self)
-            except ImportError:
-                # Error occurred while importing the file or class
-                self._processor = None
-        else:
-            # If the file doesn't exist, set _processor to None
-            self._processor = None
             
+        #If it has an install script then execute it.
+        install_file_name = "install.py"
+        self.install_script_path = self.scripts_path / install_file_name        
+        if self.install_script_path.exists():
+            module_name = install_file_name[:-3]  # Remove the ".py" extension
+            module_spec = importlib.util.spec_from_file_location(module_name, str(self.install_script_path))
+            module = importlib.util.module_from_spec(module_spec)
+            module_spec.loader.exec_module(module)
+            if hasattr(module, "Install"):
+                self._install = module.Install(self)
+            else:
+                self._install = None
+
         #Install requirements
         for entry in self._dependencies:
             if not is_package_installed(entry):
                 install_package(entry)
 
-        if file_path.exists():
-            module_name = file_name[:-3]  # Remove the ".py" extension
-            module_spec = importlib.util.spec_from_file_location(module_name, str(file_path))
+        # Search for any processor code
+        processor_file_name = "processor.py"
+        self.processor_script_path = self.scripts_path / processor_file_name
+        if self.processor_script_path.exists():
+            module_name = processor_file_name[:-3]  # Remove the ".py" extension
+            module_spec = importlib.util.spec_from_file_location(module_name, str(self.processor_script_path))
             module = importlib.util.module_from_spec(module_spec)
             module_spec.loader.exec_module(module)
             if hasattr(module, "Processor"):
@@ -343,7 +344,7 @@ class AIPersonality:
         else:
             self._processor = None
         # Get a list of all files in the assets folder
-        contents = [str(file) for file in assets_path.iterdir() if file.is_file()]
+        contents = [str(file) for file in self.assets_path.iterdir() if file.is_file()]
 
         self._assets_list = contents
         return config
@@ -379,6 +380,7 @@ class AIPersonality:
             "personality_description": self._personality_description,
             "personality_conditioning": self._personality_conditioning,
             "welcome_message": self._welcome_message,
+            "include_welcome_message_in_disucssion": self._include_welcome_message_in_disucssion,
             "user_message_prefix": self._user_message_prefix,
             "link_text": self._link_text,
             "ai_message_prefix": self._ai_message_prefix,
@@ -414,6 +416,7 @@ class AIPersonality:
             "personality_description": self._personality_description,
             "personality_conditioning": self._personality_conditioning,
             "welcome_message": self._welcome_message,
+            "include_welcome_message_in_disucssion": self._include_welcome_message_in_disucssion,
             "user_message_prefix": self._user_message_prefix,
             "link_text": self._link_text,
             "ai_message_prefix": self._ai_message_prefix,
@@ -561,6 +564,27 @@ class AIPersonality:
             message (str): The new welcome message for the AI assistant.
         """
         self._welcome_message = message
+
+    @property
+    def include_welcome_message_in_disucssion(self) -> bool:
+        """
+        Getter for the include welcome message in disucssion.
+
+        Returns:
+            bool: whether to add the welcome message to tje discussion or not.
+        """
+        return self._include_welcome_message_in_disucssion
+
+    @include_welcome_message_in_disucssion.setter
+    def include_welcome_message_in_disucssion(self, message: bool):
+        """
+        Setter for the welcome message.
+
+        Args:
+            message (str): The new welcome message for the AI assistant.
+        """
+        self._include_welcome_message_in_disucssion = message
+
 
     @property
     def user_message_prefix(self) -> str:
