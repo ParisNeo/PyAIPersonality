@@ -64,6 +64,7 @@ def extract_results(url, max_num):
 
             # Extract the link, title, and content from the <div> tags
             links = div_tags[0].find_all("a")
+            href_value = links[1].get('href')
             span = links[1].find_all("span")
             link = span[0].text.strip()
 
@@ -73,6 +74,7 @@ def extract_results(url, max_num):
             # Add the extracted information to the list
             results_list.append({
                 "link": link,
+                "href": href_value,
                 "title": title,
                 "content": content
             })
@@ -106,11 +108,12 @@ class Processor(PAPScript):
         """
         formatted_text = ""
         results = extract_results(f"https://duckduckgo.com/?q={format_url_parameter(query)}&t=h_&ia=web", self.personality._processor_cfg["num_results"])
-        for result in results:
+        for i, result in enumerate(results):
             title = result["title"]
             content = result["content"]
             link = result["link"]
-            formatted_text += f"--\n# title:\n{title}\n# content:\n{content}\n[source]({link})\n--\n\n"
+            href = result["href"]
+            formatted_text += f"--\n# source: {link} [{i}]({href})\n# title:\n{title}\n# content:\n{content}\n--\n\n"
 
         print("Searchengine results : ")
         print(formatted_text)
@@ -142,7 +145,7 @@ class Processor(PAPScript):
                 return True
 
         # 1 first ask the model to formulate a query
-        prompt = f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\n### Optimized search query:\n"
+        prompt = f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\n### Optimized search query (no explanation):\n"
         print(prompt)
         search_query = format_url_parameter(generate_fn(prompt, self.personality._processor_cfg["max_query_size"], partial(process,bot_says=bot_says)))
         if step_callback is not None:
@@ -156,7 +159,8 @@ class Processor(PAPScript):
         sources_text = "\n# Sources :\n"
         for result in results:
             link = result["link"]
-            sources_text += f"[source : {link}]({link})\n\n"
+            href = result["href"]
+            sources_text += f"[source : {link}]({href})\n\n"
 
         output = output+sources_text
         if step_callback is not None:
