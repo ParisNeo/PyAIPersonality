@@ -5,10 +5,20 @@ import sys
 sd_folder = Path(__file__).resolve().parent.parent / "sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
+from pyaipersonality import PAPScript, AIPersonality
+import urllib.parse
+import urllib.request
+import json
+import time
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+from functools import partial
+import sys
 
 class SD:
-    def __init__(self):
+    def __init__(self, personality):
         # Get the current directory
         current_dir = Path(__file__).resolve().parent
 
@@ -161,7 +171,7 @@ class SD:
             opt.ckpt = "models/ldm/text2img-large/model.ckpt"
             opt.outdir = "outputs/txt2img-samples-laion400m"
         else:
-            opt.ckpt = current_dir.parent / "models"/"v1-5-pruned-emaonly.ckpt"
+            opt.ckpt = current_dir.parent / "models"/ personality._processor_cfg["model_name"]
         seed_everything(opt.seed)
 
         config = OmegaConf.load(f"{self.sd_folder / opt.config}")
@@ -281,19 +291,6 @@ class SD:
         return files[-1]
         
 
-
-
-from pyaipersonality import PAPScript, AIPersonality
-import urllib.parse
-import urllib.request
-import json
-import time
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-from functools import partial
-import sys
    
 class Processor(PAPScript):
     """
@@ -305,7 +302,7 @@ class Processor(PAPScript):
     def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
         self.personality = personality
-        self.sd = SD()
+        self.sd = SD(personality)
 
     def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
         """

@@ -156,7 +156,7 @@ class AIPersonality:
         "time": datetime.now().strftime("%H:%M:%S"), # Replaces {{time}} with actual time
     }
     
-    def __init__(self, personality_package_path: str|Path = None):
+    def __init__(self, personality_package_path: str|Path = None, run_scripts=True):
         """
         Initialize an AIPersonality instance.
 
@@ -170,6 +170,8 @@ class AIPersonality:
         # First setup a default personality
         # Version
         self._version = pkg_resources.get_distribution('pyaipersonality').version
+
+        self.run_scripts = run_scripts
 
         #General information
         self._author: str = "ParisNeo"
@@ -310,39 +312,39 @@ class AIPersonality:
         self.scripts_path.mkdir(parents=True, exist_ok=True)
 
 
-            
-        #If it has an install script then execute it.
-        install_file_name = "install.py"
-        self.install_script_path = self.scripts_path / install_file_name        
-        if self.install_script_path.exists():
-            module_name = install_file_name[:-3]  # Remove the ".py" extension
-            module_spec = importlib.util.spec_from_file_location(module_name, str(self.install_script_path))
-            module = importlib.util.module_from_spec(module_spec)
-            module_spec.loader.exec_module(module)
-            if hasattr(module, "Install"):
-                self._install = module.Install(self)
-            else:
-                self._install = None
+        if self.run_scripts:
+            #If it has an install script then execute it.
+            install_file_name = "install.py"
+            self.install_script_path = self.scripts_path / install_file_name        
+            if self.install_script_path.exists():
+                module_name = install_file_name[:-3]  # Remove the ".py" extension
+                module_spec = importlib.util.spec_from_file_location(module_name, str(self.install_script_path))
+                module = importlib.util.module_from_spec(module_spec)
+                module_spec.loader.exec_module(module)
+                if hasattr(module, "Install"):
+                    self._install = module.Install(self)
+                else:
+                    self._install = None
 
-        #Install requirements
-        for entry in self._dependencies:
-            if not is_package_installed(entry):
-                install_package(entry)
+            #Install requirements
+            for entry in self._dependencies:
+                if not is_package_installed(entry):
+                    install_package(entry)
 
-        # Search for any processor code
-        processor_file_name = "processor.py"
-        self.processor_script_path = self.scripts_path / processor_file_name
-        if self.processor_script_path.exists():
-            module_name = processor_file_name[:-3]  # Remove the ".py" extension
-            module_spec = importlib.util.spec_from_file_location(module_name, str(self.processor_script_path))
-            module = importlib.util.module_from_spec(module_spec)
-            module_spec.loader.exec_module(module)
-            if hasattr(module, "Processor"):
-                self._processor = module.Processor(self)
+            # Search for any processor code
+            processor_file_name = "processor.py"
+            self.processor_script_path = self.scripts_path / processor_file_name
+            if self.processor_script_path.exists():
+                module_name = processor_file_name[:-3]  # Remove the ".py" extension
+                module_spec = importlib.util.spec_from_file_location(module_name, str(self.processor_script_path))
+                module = importlib.util.module_from_spec(module_spec)
+                module_spec.loader.exec_module(module)
+                if hasattr(module, "Processor"):
+                    self._processor = module.Processor(self)
+                else:
+                    self._processor = None
             else:
                 self._processor = None
-        else:
-            self._processor = None
         # Get a list of all files in the assets folder
         contents = [str(file) for file in self.assets_path.iterdir() if file.is_file()]
 

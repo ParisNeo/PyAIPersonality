@@ -1,15 +1,15 @@
+numpy
+opencv-python
+imageio
+imageio-ffmpeg
 --find-links https://download.pytorch.org/whl/cu117
 torch==2.0.0
 torchvision
 torchaudio
-numpy
 albumentations
 diffusers
-opencv-python
 pudb
 invisible-watermark
-imageio
-imageio-ffmpeg
 pytorch-lightning==1.6.5
 omegaconf
 test-tube>=0.7.5
@@ -21,4 +21,3 @@ torchmetrics
 kornia
 -e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers
 -e git+https://github.com/openai/CLIP.git@main#egg=clip
--e .

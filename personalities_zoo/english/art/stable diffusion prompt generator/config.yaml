@@ -35,6 +35,7 @@ processor_cfg:
   custom_workflow: true
   process_model_input: false
   process_model_output: false
+  model_name: v1-5-pruned-emaonly.ckpt # good
   max_query_size: 350 #maximum number of tokens per search query
   max_summery_size: 300 #maximum number of tokens per summary text
   num_images: 3 #Number of images to build
