@@ -341,7 +341,7 @@ class Processor(PAPScript):
             step_callback(sd_prompt, 1)
         generated_file_name = str(self.sd.generate(sd_prompt)).replace("\\","/")
 
-        sources_text = f"\n![{sd_prompt}]({generated_file_name})\n"
+        sources_text = f"\n![sd_prompt]({generated_file_name})\n"
         output = sources_text
         if step_callback is not None:
             step_callback(output, 3)
