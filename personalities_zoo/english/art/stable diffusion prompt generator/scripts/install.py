@@ -15,7 +15,7 @@ class Install:
             
             # Step 2: Install dependencies using pip from requirements.txt
             requirements_file = current_dir / "requirements.txt"
-            subprocess.run(["pip", "install", "-r", str(requirements_file)])
+            subprocess.run(["pip", "install", "-r", str(requirements_file), "-f", "https://download.pytorch.org/whl/cu117/torch_stable.html"])
 
             # Step 1: Clone repository
             subprocess.run(["git", "clone", "https://github.com/CompVis/stable-diffusion.git", str(sd_folder)])
