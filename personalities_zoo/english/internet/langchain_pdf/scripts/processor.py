@@ -4,9 +4,8 @@ import urllib.request
 import json
 import time
 from PyPDF2 import PdfReader
-from py
 
-from langchain.text_splitter import RecursiveCharacterTextSplitter 
+from langchain.text_splitter import CharacterTextSplitter 
 from langchain.embeddings.llamacpp import LlamaCppEmbeddings
 from langchain.vectorstores import FAISS
 from langchain.chains.question_answering import load_qa_chain
@@ -23,24 +22,26 @@ class Processor(PAPScript):
     Inherits from PAPScript.
     """
 
-    def __init__(self, personality: AIPersonality) -> None:
+    def __init__(self, personality: AIPersonality, model = None) -> None:
         super().__init__()
         self.personality = personality
+        self.model = model
+    
+    def build_db(self):
         self.pdf =  PdfReader(self.personality._processor_cfg["pdf_file_path"])
         text = ""
         for page in self.pdf.pages:
             text += page.extract_text()
 
-        self.text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=1000,
-            chunk_overlap=200,
+        self.text_splitter = CharacterTextSplitter(
+            chunk_size=250,
+            chunk_overlap=0,
             length_function=len
         )
-        self.chunks = self.text_splitter.split_text(text=text)
+        self.chunks = self.text_splitter.split_text(text)
         print("Vectorizing document")
-        self.emb = LlamaCppEmbeddings(model_path="models/llama_cpp_official/Wizard-Vicuna-7B-Uncensored.ggmlv2.q4_0.bin", em)
+        self.emb = LlamaCppEmbeddings(model_path="models/llama_cpp_official/Wizard-Vicuna-7B-Uncensored.ggmlv2.q4_0.bin", n_ctx=2048)
         
-        if 
         self.vector_store = FAISS.from_texts(self.chunks, embedding=self.emb)
         print("Vectorization done successfully")
 

@@ -8,6 +8,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from functools import partial
+import sys
 
 def format_url_parameter(value:str):
     encoded_value = value.strip().replace("\"","")
@@ -132,6 +133,8 @@ class Processor(PAPScript):
         """
         bot_says = ""
         def process(text, bot_says):
+            print(text,end="")
+            sys.stdout.flush()
             bot_says = bot_says + text
             if self.personality.detect_antiprompt(bot_says):
                 return False
@@ -139,7 +142,7 @@ class Processor(PAPScript):
                 return True
 
         # 1 first ask the model to formulate a query
-        prompt = f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\nsearch_query:"
+        prompt = f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\n### Optimized search query:"
         print(prompt)
         search_query = format_url_parameter(generate_fn(prompt, partial(process,bot_says=bot_says)))
         if step_callback is not None:
@@ -147,7 +150,7 @@ class Processor(PAPScript):
         search_result = self.internet_search(search_query)
         if step_callback is not None:
             step_callback(search_result, 2)
-        prompt = f"### Instruction:\nUse Search engine output to answer Human question. \nquestion:\n{search_query}\nsearch results:\n{search_result}\nsummary with citation:\n"
+        prompt = f"### Instruction:\nUse Search engine output to answer Human question. \nquestion:\n{search_query}\n### Search results:\n{search_result}\n### Summary with markdown style citation links:\n"
         print(prompt)
         output = generate_fn(prompt, partial(process,bot_says=bot_says))
         if step_callback is not None:

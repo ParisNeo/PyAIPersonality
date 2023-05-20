@@ -45,4 +45,4 @@ processor_cfg:
   custom_workflow: true
   process_model_input: false
   process_model_output: false
-  pdf_file_path:  path/to/your/pff.pdf # Path to the PDF that will be discussed
+  pdf_file_path:  C:\Users\aloui\Desktop\pdf_test_cm3.pdf # Path to the PDF that will be discussed

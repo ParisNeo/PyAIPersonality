@@ -107,7 +107,7 @@ class Processor(PAPScript):
             title = result["title"]
             content = result["content"]
             link = result["link"]
-            formatted_text += f"--\n# title:\n{title}\n# content:\n{content}\n[source]({link})\n--\n\n"
+            formatted_text += f"{title}: {content}\nsource: {link}\n\n"
 
         print("Searchengine results : ")
         print(formatted_text)
