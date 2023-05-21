@@ -1,14 +1,9 @@
 from pyaipersonality import PAPScript, AIPersonality
-import urllib.parse
-import urllib.request
-import json
-import time
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from functools import partial
-import sys
 
 def format_url_parameter(value:str):
     encoded_value = value.strip().replace("\"","")
@@ -136,8 +131,7 @@ class Processor(PAPScript):
         """
         bot_says = ""
         def process(text, bot_says):
-            print(text,end="")
-            sys.stdout.flush()
+            print(text,end="", flush=True)
             bot_says = bot_says + text
             if self.personality.detect_antiprompt(bot_says):
                 return False
@@ -145,15 +139,15 @@ class Processor(PAPScript):
                 return True
 
         # 1 first ask the model to formulate a query
-        prompt = f"### Instruction:\nGenerate an enhanced internet search query out of this prompt:\n{prompt}\n### Optimized search query (no explanation):\n"
-        print(prompt)
-        search_query = format_url_parameter(generate_fn(prompt, self.personality._processor_cfg["max_query_size"], partial(process,bot_says=bot_says)))
+        search_formulation_prompt = f"### Instruction:\nFormulate a search query text out of the user prompt. Do not add extra information. Just stick to the User request.\n### User:\n{prompt}\n### Search query:\n"
+        print(search_formulation_prompt)
+        search_query = format_url_parameter(generate_fn(search_formulation_prompt, self.personality._processor_cfg["max_query_size"], partial(process,bot_says=bot_says)))
         if step_callback is not None:
             step_callback(search_query, 1)
         search_result, results = self.internet_search(search_query)
         if step_callback is not None:
             step_callback(search_result, 2)
-        prompt = f"### Instruction:\nUse Search engine output to answer Human question. \nquestion:\n{search_query}\n### Search results:\n{search_result}\n### Single paragraph summary:\n"
+        prompt = f"### Instruction:\nUse Search engine results to answer User question by summerizing the results in a single coherant paragraph in form of a markdown text with sources citation links. ### Search results:\n{search_result}\n\n### User question:\n{prompt}\n### Single paragraph summary :\n"
         print(prompt)
         output = generate_fn(prompt, self.personality._processor_cfg["max_summery_size"], partial(process, bot_says=bot_says))
         sources_text = "\n# Sources :\n"
