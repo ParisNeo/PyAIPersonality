@@ -299,7 +299,7 @@ class Processor(PAPScript):
         super().__init__()
         self.personality = personality
         self.sd = SD(personality)
-        
+
     def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
         """
         Runs the workflow for processing the model input and output.
@@ -328,13 +328,7 @@ class Processor(PAPScript):
         # 1 first ask the model to formulate a query
         prompt = f"prompt:\n{prompt}\n### Instruction:\nWrite a more detailed description of the proposed image. Include information about the image style.\n### Imagined description:\n"
         print(prompt)
-        sd_prompt = generate_fn(
-                                prompt, 
-                                self.personality._processor_cfg["max_query_size"], 
-                                partial(process,bot_says=bot_says)
-                                )
-        if step_callback is not None:
-            step_callback(sd_prompt, 1)
+        sd_prompt = prompt
         files = self.sd.generate(sd_prompt, self.personality._processor_cfg["num_images"], self.personality._processor_cfg["seed"])
         output = ""
         for i in range(len(files)):

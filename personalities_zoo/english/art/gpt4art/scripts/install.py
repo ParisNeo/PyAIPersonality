@@ -15,7 +15,19 @@ class Install:
             
             # Step 2: Install dependencies using pip from requirements.txt
             requirements_file = current_dir / "requirements.txt"
-            subprocess.run(["pip", "install", "-r", str(requirements_file), "-f", "https://download.pytorch.org/whl/cu117/torch_stable.html"])
+            try:
+                print("Checking pytorch")
+                import torch
+                import torchvision
+                if torch.cuda.is_available():
+                    print("CUDA is supported.")
+                else:
+                    print("CUDA is not supported by the current pytorch. Reinstalling PyTorch with CUDA support.")
+                    self.reinstall_pytorch_with_cuda()
+            except Exception as ex:
+                print("Py torch not found")
+                self.reinstall_pytorch_with_cuda()
+            subprocess.run(["pip", "install", "--no-cache-dir", "-r", str(requirements_file)])
 
             # Step 1: Clone repository
             subprocess.run(["git", "clone", "https://github.com/CompVis/stable-diffusion.git", str(sd_folder)])
@@ -43,3 +55,6 @@ class Install:
                     file.write(data)
             
             progress_bar.close()
+            
+    def reinstall_pytorch_with_cuda(self):
+        subprocess.run(["pip", "install", "torch", "torchvision", "torchaudio", "--no-cache-dir", "--index-url", "https://download.pytorch.org/whl/cu117"])
