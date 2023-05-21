@@ -38,4 +38,5 @@ processor_cfg:
   model_name: v1-5-pruned-emaonly.ckpt # good
   max_query_size: 350 #maximum number of tokens per search query
   max_summery_size: 300 #maximum number of tokens per summary text
-  num_images: 3 #Number of images to build
+  num_images: 1 #Number of images to build
+  seed: -1 # seed

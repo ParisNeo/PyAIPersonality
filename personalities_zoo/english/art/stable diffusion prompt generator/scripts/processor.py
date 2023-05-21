@@ -153,7 +153,7 @@ class SD:
         parser.add_argument(
             "--seed",
             type=int,
-            default=42,
+            default=-1,
             help="the seed (for reproducible sampling)",
         )
         parser.add_argument(
@@ -172,7 +172,6 @@ class SD:
             opt.outdir = "outputs/txt2img-samples-laion400m"
         else:
             opt.ckpt = current_dir.parent / "models"/ personality._processor_cfg["model_name"]
-        seed_everything(opt.seed)
 
         config = OmegaConf.load(f"{self.sd_folder / opt.config}")
         self.model = load_model_from_config(config, f"{opt.ckpt}")
@@ -201,10 +200,13 @@ class SD:
 
         self.opt = opt
 
-    def generate(self, prompt):
+    def generate(self, prompt, n_samples=1, seed = -1):
+        self.opt.seed=seed
+        self.opt.n_samples=n_samples
         outpath = self.opt.outdir
         batch_size = self.opt.n_samples
         n_rows = self.opt.n_rows if self.opt.n_rows > 0 else batch_size
+        seed_everything(self.opt.seed)
 
         if not self.opt.from_file:
             assert prompt is not None
@@ -288,7 +290,7 @@ class SD:
         
         out_put_path = Path("outputs/txt2img-samples/samples")
         files =[f for f in out_put_path.iterdir()]
-        return files[-1]
+        return files[-n_samples:]
         
 
    
@@ -339,18 +341,14 @@ class Processor(PAPScript):
                                 )
         if step_callback is not None:
             step_callback(sd_prompt, 1)
-        generated_file_name = str(self.sd.generate(sd_prompt)).replace("\\","/")
-
-        sources_text = f"\n![{sd_prompt}]({generated_file_name})\n"
-        output = sources_text
+        files = self.sd.generate(sd_prompt, self.personality._processor_cfg["num_images"], self.personality._processor_cfg["seed"])
+        output = ""
+        for i in range(len(files)):
+            files[i] = str(files[i]).replace("\\","/")
+            output += f"![{sd_prompt}]({files[i]})\n"
         if step_callback is not None:
             step_callback(output, 3)
 
         return output
 
 
-
-
-# Usage
-#sd = SD()
-#sd.generate("YOUR-PROMPT-HERE")
