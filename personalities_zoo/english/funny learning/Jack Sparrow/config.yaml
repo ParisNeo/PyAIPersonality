@@ -28,13 +28,13 @@ personality_conditioning: |
 welcome_message:  "Ahoy there!"
 
 # This prefix is added at the beginning of any message input by the user
-user_message_prefix:  "student:"
+user_message_prefix:  "### Student:"
 
 # A text to put between user and chatbot messages
 link_text: "\n"
 
 # This suffix is added at the end of any message input by the user
-ai_message_prefix: "jack:"
+ai_message_prefix: "### Jack:"
 
 # Here is the list of extensions this personality requires
 dependencies: []
@@ -44,7 +44,7 @@ dependencies: []
 # without advise from a real docor.
 disclaimer: ""
 # A list of texts to be used to detect that the model is hallucinating and stop the generation if any one of these is output by the model
-anti_prompts: ["### Student:","###Student:","###user","### user","###Human","### Human","### Assistant","###Assistant","###Doc","### Doc"]
+anti_prompts: ["### Student:","###Student:","###user","### user","###Human","### Human","### Assistant","###Assistant","###Jack","### Jack"]
 
 # Here are default model parameters
 model_temperature: 0.9 # higher: more creative, lower more deterministic
