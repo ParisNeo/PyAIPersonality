@@ -146,6 +146,7 @@ class Processor(PAPScript):
 Formulate a search query text out of the user prompt.
 Keep all important information in the query and do not add unnecessary text.
 Write a short query.
+Do not explain the query.
 question: {prompt}
 search query: """
         print(search_formulation_prompt)
@@ -159,12 +160,10 @@ search query: """
             step_callback(search_result, 2)
         prompt = f"""### Instruction:
 Use Search engine results to answer User question by summerizing the results in a single coherant paragraph in form of a markdown text with sources citation links.
-### Search results:
+search results:
 {search_result}
-### User question:
-{prompt}
-### Single paragraph summary:
-        """
+question: {prompt}
+answer:"""
         print(prompt)
         output = generate_fn(prompt, self.personality._processor_cfg["max_summery_size"], partial(process, bot_says=bot_says))
         sources_text = "\n# Sources :\n"
