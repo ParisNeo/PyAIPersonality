@@ -187,7 +187,7 @@ class SD:
         os.makedirs(opt.outdir, exist_ok=True)
 
         print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
-        wm = "StableDiffusionV1"
+        wm = "Gpt4Art"
         self.wm_encoder = WatermarkEncoder()
         self.wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
 
