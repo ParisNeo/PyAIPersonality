@@ -85,7 +85,7 @@ if __name__=="__main__":
             print("Error downloading file:", e)
             sys.exit(1)
 
-    personality = AIPersonality("personalities_zoo/english/internet/gpt4internet")
+    personality = AIPersonality("personalities_zoo/english/art/gpt4art")
     model = build_model(url)
     generation_function = partial(generate_output, model)
 
@@ -108,7 +108,8 @@ if __name__=="__main__":
 
             print(f"{personality.name}:", end='')
             output = personality.processor.run_workflow(generation_function, prompt, full_discussion)
-            full_discussion+=personality.user_message_prefix+prompt+personality.link_text+personality.ai_message_prefix+output
+            print(output)
+            full_discussion += personality.user_message_prefix+prompt+personality.link_text+personality.ai_message_prefix
             full_discussion += output
 
         except KeyboardInterrupt:
