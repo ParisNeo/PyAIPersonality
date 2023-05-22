@@ -53,7 +53,7 @@ if __name__=="__main__":
     # choose your model
     # undomment the model you want to use
     # These models can be automatically downloaded
-    url = "https://huggingface.co/TheBloke/Wizard-Vicuna-7B-Uncensored-GGML/resolve/main/Wizard-Vicuna-7B-Uncensored.ggmlv2.q4_0.bin"
+    url = "https://huggingface.co/CRD716/ggml-vicuna-1.1-quantized/resolve/main/legacy-ggml-vicuna-7B-1.1-q4_0.bin"
     # You can add any llamacpp compatible model
 
     model_name  = url.split("/")[-1]
