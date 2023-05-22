@@ -1,10 +1,14 @@
+# Got to install this before pyaipersonality
 from pyaipersonality import AIPersonality
-from llama_cpp import Llama
+import subprocess
 
+# We install the llamacpp if it doesn't exist
+subprocess.run(["pip", "install", "--upgrade", "llama-cpp-python"])
+from llama_cpp import Llama
+    
 from pathlib import Path
 import urllib.request
 import sys
-import os
 
 from tqdm import tqdm
 import random
@@ -58,7 +62,7 @@ if __name__=="__main__":
     # choose your model
     # undomment the model you want to use
     # These models can be automatically downloaded
-    url = "https://huggingface.co/TheBloke/Wizard-Vicuna-7B-Uncensored-GGML/resolve/main/Wizard-Vicuna-7B-Uncensored.ggmlv2.q4_0.bin"
+    url = "https://huggingface.co/CRD716/ggml-vicuna-1.1-quantized/resolve/main/legacy-ggml-vicuna-7B-1.1-q4_0.bin"
     # You can add any llamacpp compatible model
 
     model_name  = url.split("/")[-1]
@@ -85,7 +89,7 @@ if __name__=="__main__":
             print("Error downloading file:", e)
             sys.exit(1)
 
-    personality = AIPersonality("personalities_zoo/english/art/stable diffusion prompt generator")
+    personality = AIPersonality("personalities_zoo/english/generic/gpt4all")
     model = build_model(url)
     generation_function = partial(generate_output, model)
 
@@ -107,9 +111,8 @@ if __name__=="__main__":
                 continue
 
             print(f"{personality.name}:", end='')
-            output = personality.processor.run_workflow(generation_function, prompt, full_discussion)
-            print(output)
-            full_discussion += personality.user_message_prefix+prompt+personality.link_text+personality.ai_message_prefix
+            output = generation_function(full_discussion, 2048)
+            full_discussion+=personality.user_message_prefix+prompt+personality.link_text+personality.ai_message_prefix+output
             full_discussion += output
 
         except KeyboardInterrupt:

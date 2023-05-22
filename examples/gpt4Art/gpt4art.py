@@ -8,6 +8,7 @@ import os
 
 from tqdm import tqdm
 import random
+from functools import partial
 
 def build_model(url):
     model = Llama(
@@ -18,7 +19,7 @@ def build_model(url):
             )
     return model
 
-def generate_output(model, prompt, callback=None):
+def generate_output(model, prompt, max_tokens, callback=None):
     output=""
     model.reset()
     tokens = model.tokenize(prompt.encode())
@@ -30,7 +31,7 @@ def generate_output(model, prompt, callback=None):
                     top_p=personality.model_top_p,
                     repeat_penalty=personality.model_repeat_penalty
                 ):
-        if count >= personality.model_n_predicts or (tok == model.token_eos()):
+        if count >= max_tokens or (tok == model.token_eos()):
             break
         word = model.detokenize([tok]).decode()
         count += 1
@@ -39,6 +40,10 @@ def generate_output(model, prompt, callback=None):
         # Use Hallucination suppression system
         if personality.detect_antiprompt(output):
             break
+        
+        if callback is not None:
+            if not callback(word):
+                break
         else:
             print(f"{word}", end='', flush=True)
     print()
@@ -80,8 +85,9 @@ if __name__=="__main__":
             print("Error downloading file:", e)
             sys.exit(1)
 
-    personality = AIPersonality("personalities_zoo/english/internet/gpt4internetv0")
+    personality = AIPersonality("personalities_zoo/english/art/gpt4art")
     model = build_model(url)
+    generation_function = partial(generate_output, model)
 
     # If there is a disclaimer, show it
     if personality.disclaimer!="":
@@ -100,18 +106,11 @@ if __name__=="__main__":
             if prompt == '':
                 continue
 
-            preprocessed_prompt = personality.processor.process_model_input(prompt)
-            if preprocessed_prompt is not None:
-                full_discussion+=personality.user_message_prefix+preprocessed_prompt+personality.link_text+personality.ai_message_prefix
-            else:
-                full_discussion+=personality.user_message_prefix+preprocessed_prompt+personality.link_text+personality.ai_message_prefix
-
             print(f"{personality.name}:", end='')
-
-            output = generate_output(model, full_discussion)
-
-            if personality.processor.process_model_output is not None:
-                output = personality.processor.process_model_output(output)
+            output = personality.processor.run_workflow(generation_function, prompt, full_discussion)
+            print(output)
+            full_discussion += personality.user_message_prefix+prompt+personality.link_text+personality.ai_message_prefix
+            full_discussion += output
 
         except KeyboardInterrupt:
             print("Keyboard interrupt detected.\nBye")
