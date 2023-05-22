@@ -53,5 +53,9 @@ class Install:
             progress_bar.close()
             
     def reinstall_pytorch_with_cuda(self):
+        try:
+            subprocess.run(["pip", "uninstall", "torch", "torchvision", "torchaudio"])
+        except Exception as ex:
+            pass
         subprocess.run(["pip", "install", "torch", "torchvision", "torchaudio", "--no-cache-dir", "--index-url", "https://download.pytorch.org/whl/cu117"])
         
