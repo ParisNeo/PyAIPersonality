@@ -10,11 +10,9 @@ class Install:
         sd_folder = current_dir / "sd"
 
         if not sd_folder.exists():
-            print("This is the first time you are using this personality.")
+            print("-------------- GPT4ALL backend -------------------------------")
+            print("This is the first time you are using this backend.")
             print("Installing ...")
-            
-            # Step 2: Install dependencies using pip from requirements.txt
-            requirements_file = current_dir / "requirements.txt"
             try:
                 print("Checking pytorch")
                 import torch
@@ -22,12 +20,10 @@ class Install:
                 if torch.cuda.is_available():
                     print("CUDA is supported.")
                 else:
-                    print("CUDA is not supported by the current pytorch. Reinstalling PyTorch with CUDA support.")
+                    print("CUDA is not supported. Reinstalling PyTorch with CUDA support.")
                     self.reinstall_pytorch_with_cuda()
             except Exception as ex:
-                print("Py torch not found")
                 self.reinstall_pytorch_with_cuda()
-            subprocess.run(["pip", "install", "--no-cache-dir", "-r", str(requirements_file)])
 
             # Step 1: Clone repository
             subprocess.run(["git", "clone", "https://github.com/CompVis/stable-diffusion.git", str(sd_folder)])
@@ -57,4 +53,9 @@ class Install:
             progress_bar.close()
             
     def reinstall_pytorch_with_cuda(self):
+        try:
+            subprocess.run(["pip", "uninstall", "torch", "torchvision", "torchaudio"])
+        except Exception as ex:
+            pass
         subprocess.run(["pip", "install", "torch", "torchvision", "torchaudio", "--no-cache-dir", "--index-url", "https://download.pytorch.org/whl/cu117"])
+        

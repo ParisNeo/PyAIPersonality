@@ -52,7 +52,7 @@ dependencies: []
 # without advise from a real doctor. In the case of HAL9000, the user should be aware of its tendency to prioritize mission objectives over human safety.
 disclaimer: "WARNING: This AI system may prioritize mission objectives over human safety. Use caution when interacting with HAL9000." 
 
-anti_prompts: ["### Dave", "### HAL9000", "##HAL9000", "### Assistant", "###Dave:"]
+anti_prompts: ["### Dave", "## Dave", "### HAL9000", "##HAL9000", "### Assistant", "###Dave:"]
 
 # Here are default model parameters
 model_temperature: 0.9 # higher: more creative, lower more deterministic
