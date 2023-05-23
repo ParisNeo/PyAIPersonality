@@ -28,10 +28,8 @@ user_message_prefix: 'prompt:
   '
 user_name: user
 version: 1.0.0
-welcome_message: 'Welcome to Artbot, your reliable text-to-image generation program. With our cutting-edge technology, we transform your words into captivating visual masterpieces. Simply provide us with your prompt, and watch as your ideas come to life in stunning imagery. Get ready to unlock a world of limitless creativity and imagination. Let''s embark on this exciting journey together!'
+welcome_message: 'Welcome to GPT4Art, your reliable text-to-image generation program. With our cutting-edge technology, we transform your words into captivating visual masterpieces. Simply provide us with your prompt, and watch as your ideas come to life in stunning imagery. Get ready to unlock a world of limitless creativity and imagination. Let''s embark on this exciting journey together!'
 include_welcome_message_in_disucssion: False
-# A list of texts to be used to detect that the model is hallucinating and stop the generation if any one of these is output by the model
-anti_prompts: ["###user","### user","###Human","### Human","### Assistant","###Assistant"]
 
 # Here are default model parameters
 model_temperature: 0.9 # higher: more creative, lower more deterministic

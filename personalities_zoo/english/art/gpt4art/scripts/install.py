@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 import requests
 from tqdm import tqdm
+import yaml
 
 class Install:
     def __init__(self, personality):
@@ -44,6 +45,9 @@ class Install:
             total_size = int(response.headers.get("content-length", 0))
             block_size = 1024  # 1KB
             progress_bar = tqdm(total=total_size, unit="B", unit_scale=True)
+
+            # Create configuration file
+            self.create_config_file()
             
             with open(model_file, "wb") as file:
                 for data in response.iter_content(block_size):
@@ -53,9 +57,27 @@ class Install:
             progress_bar.close()
             
     def reinstall_pytorch_with_cuda(self):
-        try:
-            subprocess.run(["pip", "uninstall", "torch", "torchvision", "torchaudio"])
-        except Exception as ex:
-            pass
         subprocess.run(["pip", "install", "torch", "torchvision", "torchaudio", "--no-cache-dir", "--index-url", "https://download.pytorch.org/whl/cu117"])
-        
+
+    def create_config_file(self):
+        """
+        Create a config_local.yaml file with predefined data.
+
+        The function creates a config_local.yaml file with the specified data. The file is saved in the parent directory
+        of the current file.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        data = {
+            "model_name": "DreamShaper_5_beta2_noVae_half_pruned.ckpt",     # good
+            "max_generation_prompt_size": 512,                              # maximum number of tokens per generation prompt
+            "num_images": 1,                                                # Number of images to build
+            "seed": -1                                                      # seed
+        }
+        path = Path(__file__).parent.parent / 'config_local.yaml'
+        with open(path, 'w') as file:
+            yaml.dump(data, file)

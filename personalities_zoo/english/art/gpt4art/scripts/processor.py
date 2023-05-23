@@ -6,13 +6,21 @@ sd_folder = Path(__file__).resolve().parent.parent / "sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
 from pyaipersonality import PAPScript, AIPersonality
+import urllib.parse
+import urllib.request
+import json
 import time
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
 from functools import partial
 import sys
+import yaml
+
 
 class SD:
-    def __init__(self, personality):
+    def __init__(self, config):
         # Get the current directory
         current_dir = Path(__file__).resolve().parent
 
@@ -165,7 +173,7 @@ class SD:
             opt.ckpt = "models/ldm/text2img-large/model.ckpt"
             opt.outdir = "outputs/txt2img-samples-laion400m"
         else:
-            opt.ckpt = current_dir.parent / "models"/ personality._processor_cfg["model_name"]
+            opt.ckpt = current_dir.parent / "models"/ config["model_name"]
 
         config = OmegaConf.load(f"{self.sd_folder / opt.config}")
         self.model = load_model_from_config(config, f"{opt.ckpt}")
@@ -187,7 +195,7 @@ class SD:
         os.makedirs(opt.outdir, exist_ok=True)
 
         print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
-        wm = "Gpt4Art"
+        wm = "StableDiffusionV1"
         self.wm_encoder = WatermarkEncoder()
         self.wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
 
@@ -298,8 +306,26 @@ class Processor(PAPScript):
     def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
         self.personality = personality
-        self.sd = SD(personality)
-        
+        self.config = self.load_config_file()
+        self.sd = SD(self.config)
+
+    def load_config_file(self):
+        """
+        Load the content of config_local.yaml file.
+
+        The function reads the content of the config_local.yaml file and returns it as a Python dictionary.
+
+        Args:
+            None
+
+        Returns:
+            dict: A dictionary containing the loaded data from the config_local.yaml file.
+        """        
+        path = Path(__file__).parent.parent / 'config_local.yaml'
+        with open(path, 'r') as file:
+            data = yaml.safe_load(file)
+        return data
+
     def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
         """
         Runs the workflow for processing the model input and output.
@@ -330,12 +356,12 @@ class Processor(PAPScript):
         print(prompt)
         sd_prompt = generate_fn(
                                 prompt, 
-                                self.personality._processor_cfg["max_query_size"], 
+                                self.config["max_generation_prompt_size"], 
                                 partial(process,bot_says=bot_says)
                                 )
         if step_callback is not None:
             step_callback(sd_prompt, 1)
-        files = self.sd.generate(sd_prompt, self.personality._processor_cfg["num_images"], self.personality._processor_cfg["seed"])
+        files = self.sd.generate(sd_prompt, self.config["num_images"], self.config["seed"])
         output = ""
         for i in range(len(files)):
             files[i] = str(files[i]).replace("\\","/")
