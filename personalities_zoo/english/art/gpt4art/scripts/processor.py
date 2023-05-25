@@ -365,7 +365,7 @@ class Processor(PAPScript):
         output = ""
         for i in range(len(files)):
             files[i] = str(files[i]).replace("\\","/")
-            output += f"![{sd_prompt}]({files[i]})\n"
+            output += f"![]({files[i]})\n"
         if step_callback is not None:
             step_callback(output, 3)
 
