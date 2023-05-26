@@ -17,8 +17,13 @@ import importlib
 
 import subprocess
 import pkg_resources
+from enum import Enum
 
-
+class MSG_TYPE(Enum):
+    MSG_TYPE_CHUNK=0
+    MSG_TYPE_META=1
+    MSG_TYPE_REF=2
+    MSG_TYPE_CODE=3
 
 def is_package_installed(package_name):
     try:
