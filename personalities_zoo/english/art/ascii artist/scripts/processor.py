@@ -392,6 +392,7 @@ class Processor(PAPScript):
             (width, height) = image.size
             ascii_art = convert_to_ascii_art(image)
             output +="```\n"+ "\n".join(ascii_art) + "\n```"
+            
         if step_callback is not None:
             step_callback(output, 3)
 
