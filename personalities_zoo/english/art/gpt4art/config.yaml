@@ -8,9 +8,7 @@
 ## talking to.
 #
 #
-ai_message_prefix: 'response:
-
-  '
+ai_message_prefix: ''
 author: ParisNeo
 category: Art
 dependencies: []
