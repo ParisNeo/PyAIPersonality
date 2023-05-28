@@ -1,0 +1,3 @@
+max_query_size: 50
+max_summery_size: 300
+num_results: 3

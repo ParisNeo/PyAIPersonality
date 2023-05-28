@@ -32,7 +32,7 @@ user_message_prefix: '### Human:
 user_name: user
 version: 1.0.0
 welcome_message: 'Hi I am smart internet search tool. Please ask me anything and I will use the
-  internet to answer you''. Do not give example of questions.'
+  internet to answer you.'
 anti_prompts: ["### Human", "### gpt4Internet", "### Assistant", "### Search engine:","search summerizer:","search results:","\n\n\n\n\n\n"]
 
 # Here are default model parameters
@@ -48,6 +48,3 @@ processor_cfg:
   custom_workflow: true
   process_model_input: false
   process_model_output: false
-  max_query_size: 50 #maximum number of tokens per search query
-  max_summery_size: 300 #maximum number of tokens per summary text
-  num_results: 3 #Number of results to analyze

@@ -4,10 +4,11 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from bs4 import BeautifulSoup
 from functools import partial
+from pathlib import Path
+import yaml
 
 def format_url_parameter(value:str):
     encoded_value = value.strip().replace("\"","")
-    print(encoded_value)
     return encoded_value
 
 def extract_results(url, max_num):
@@ -92,6 +93,43 @@ class Processor(PAPScript):
         self.queries=[]
         self.formulations=[]
         self.summaries=[]
+        self.word_callback = None
+        self.generate_fn = None
+        self.config = self.load_config_file()
+
+    def process(self, text):
+        self.bot_says = self.bot_says + text
+        if self.personality.detect_antiprompt(self.bot_says):
+            print("Detected hallucination")
+            return False
+        else:
+            return True
+
+    def generate(self, prompt, max_size):
+        self.bot_says = ""
+        return self.generate_fn(
+                                prompt, 
+                                max_size, 
+                                self.process
+                                ).strip()    
+    
+
+    def load_config_file(self):
+        """
+        Load the content of config_local.yaml file.
+
+        The function reads the content of the config_local.yaml file and returns it as a Python dictionary.
+
+        Args:
+            None
+
+        Returns:
+            dict: A dictionary containing the loaded data from the config_local.yaml file.
+        """        
+        path = Path(__file__).parent.parent / 'config_local.yaml'
+        with open(path, 'r') as file:
+            data = yaml.safe_load(file)
+        return data
 
     
     def internet_search(self, query):
@@ -105,13 +143,13 @@ class Processor(PAPScript):
             dict: The search result as a dictionary.
         """
         formatted_text = ""
-        results = extract_results(f"https://duckduckgo.com/?q={format_url_parameter(query)}&t=h_&ia=web", self.personality._processor_cfg["num_results"])
+        results = extract_results(f"https://duckduckgo.com/?q={format_url_parameter(query)}&t=h_&ia=web", self.config["num_results"])
         for i, result in enumerate(results):
             title = result["title"]
             content = result["content"]
             link = result["link"]
             href = result["href"]
-            formatted_text += f"--\n# source: {link} [{i+1}]({href})\n# title:\n{title}\n# content:\n{content}\n--\n\n"
+            formatted_text += f"index: {i+1}\nsource: {href}\ntitle: {title}\n"
 
         print("Searchengine results : ")
         print(formatted_text)
@@ -132,40 +170,39 @@ class Processor(PAPScript):
         Returns:
             None
         """
-        bot_says = ""
-        def process(text, bot_says):
-            print(text,end="", flush=True)
-            bot_says = bot_says + text
-            if self.personality.detect_antiprompt(bot_says):
-                return False
-            else:
-                return True
+        self.word_callback = step_callback
+        self.generate_fn = generate_fn        
 
         # 1 first ask the model to formulate a query
-        search_formulation_prompt = f"""### Instruction:
+        search_formulation_prompt = f"""### Instructions:
 Formulate a search query text out of the user prompt.
 Keep all important information in the query and do not add unnecessary text.
 Write a short query.
 Do not explain the query.
-question: {prompt}
-search query: """
+## question:
+{prompt}
+### search query:
+"""
         print(search_formulation_prompt)
-        search_query = format_url_parameter(generate_fn(search_formulation_prompt, self.personality._processor_cfg["max_query_size"], partial(process,bot_says=bot_says))).strip()
+        search_query = format_url_parameter(self.generate(search_formulation_prompt, self.config["max_query_size"])).strip()
         if search_query=="":
             search_query=prompt
         if step_callback is not None:
-            step_callback(search_query, 1)
+            step_callback("Crafted search query :"+search_query+"\nSearching...", 1)
         search_result, results = self.internet_search(search_query)
         if step_callback is not None:
-            step_callback(search_result, 2)
-        prompt = f"""### Instruction:
-Use Search engine results to answer User question by summerizing the results in a single coherant paragraph in form of a markdown text with sources citation links.
-search results:
+            step_callback("Crafted search query :"+search_query+"\nSearching... OK\nSummerizing...", 1)
+        prompt = f"""### Instructions:
+Use Search engine results to answer user question by summerizing the results in a single coherant paragraph in form of a markdown text with sources citation links in the format [index](source).
+Place the citation links in front of each relevant information.
+### search results:
 {search_result}
-question: {prompt}
-answer:"""
+### question:
+{prompt}
+## answer:
+"""
         print(prompt)
-        output = generate_fn(prompt, self.personality._processor_cfg["max_summery_size"], partial(process, bot_says=bot_says))
+        output = self.generate(prompt, self.config["max_summery_size"])
         sources_text = "\n# Sources :\n"
         for result in results:
             link = result["link"]
@@ -174,7 +211,7 @@ answer:"""
 
         output = output+sources_text
         if step_callback is not None:
-            step_callback(output, 3)
+            step_callback(output, 1)
 
         return output
 
