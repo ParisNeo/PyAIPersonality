@@ -1,4 +1,3 @@
-import subprocess
 from pathlib import Path
 import os
 import sys
@@ -6,15 +5,7 @@ sd_folder = Path(".") / "shared/sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
 from pyaipersonality import PAPScript, AIPersonality
-import urllib.parse
-import urllib.request
-import json
 import time
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-from functools import partial
 import sys
 import yaml
 import re
@@ -307,6 +298,8 @@ class Processor(PAPScript):
     def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
         self.personality = personality
+        self.word_callback = None
+        self.generate_fn = None
         self.config = self.load_config_file()
         self.sd = SD(self.config)
 
@@ -336,6 +329,24 @@ class Processor(PAPScript):
         text_without_image_links = re.sub(image_link_pattern, "", markdown_text)
 
         return text_without_image_links
+
+    def process(self, text):
+        self.bot_says = self.bot_says + text
+        if self.personality.detect_antiprompt(self.bot_says):
+            print("Detected hallucination")
+            return False
+        else:
+            return True
+
+    def generate(self, prompt, max_size):
+        self.bot_says = ""
+        return self.generate_fn(
+                                prompt, 
+                                max_size, 
+                                self.process
+                                ).strip()    
+        
+
     def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
         """
         Runs the workflow for processing the model input and output.
@@ -351,26 +362,15 @@ class Processor(PAPScript):
         Returns:
             None
         """
-        bot_says = ""
-        def process(text, bot_says):
-            print(text,end="")
-            sys.stdout.flush()
-            bot_says = bot_says + text
-            if self.personality.detect_antiprompt(bot_says):
-                return False
-            else:
-                return True
+        self.word_callback = step_callback
+        self.generate_fn = generate_fn        
 
         # 1 first ask the model to formulate a query
         prompt = f"{self.remove_image_links(previous_discussion_text)}\n### Instruction:\nWrite a more detailed description of the proposed image. Include information about the image style.\n### Imagined description:\n"
         print(prompt)
-        sd_prompt = generate_fn(
-                                prompt, 
-                                self.config["max_generation_prompt_size"], 
-                                partial(process,bot_says=bot_says)
-                                )
+        sd_prompt = self.generate(prompt, self.config["max_generation_prompt_size"])
         if step_callback is not None:
-            step_callback(sd_prompt, 1)
+            step_callback(sd_prompt+"\n", 0)
 
         files = self.sd.generate(sd_prompt, self.config["num_images"], self.config["seed"])
         output = ""
@@ -378,9 +378,6 @@ class Processor(PAPScript):
             files[i] = str(files[i]).replace("\\","/")
             output += f"![]({files[i]})\n"
 
-        if step_callback is not None:
-            step_callback(output, 3)
-
-        return ""
+        return output
 
 
