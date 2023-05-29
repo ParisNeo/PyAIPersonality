@@ -19,6 +19,8 @@ class Install:
             print("-------------- GPT4ALL backend -------------------------------")
             print("This is the first time you are using this backend.")
             print("Installing ...")
+            requirements_file = current_dir / "requirements.txt"
+            subprocess.run(["pip", "install", "--upgrade", "-r", str(requirements_file)])      
             try:
                 print("Checking pytorch")
                 import torch
