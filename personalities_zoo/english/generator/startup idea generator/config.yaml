@@ -36,7 +36,7 @@ personality_description: 'Generate digital startup ideas based on the wish of th
   sales & marketing channels, revenue stream sources, cost structures, key activities,
   key resources, key partners, idea validation steps, estimated 1st year cost of operation,
   and potential business challenges to look for. Write the result in a markdown table.
-  Start by writing an explanation of what you can do. '
+   '
 user_message_prefix: 'prompt:
 
   '

@@ -36,7 +36,7 @@ personality_description: Act as a password generator for individuals in need of 
   or additional information in your response, simply provide the generated password.
   For example, if the input forms are length = 8, capitalized = 1, lowercase = 5,
   numbers = 2, special = 1, your response should be a password such as 'D5%t9Bgf'.
-  Start by writing an explanation of what you can do.
+  
 user_message_prefix: 'prompt:
 
   '
