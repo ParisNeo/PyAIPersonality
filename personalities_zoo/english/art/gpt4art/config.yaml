@@ -8,9 +8,7 @@
 ## talking to.
 #
 #
-ai_message_prefix: 'response:
-
-  '
+ai_message_prefix: ''
 author: ParisNeo
 category: Art
 dependencies: []
@@ -44,8 +42,3 @@ processor_cfg:
   custom_workflow: true
   process_model_input: false
   process_model_output: false
-  model_name: DreamShaper_5_beta2_noVae_half_pruned.ckpt # good
-  max_query_size: 512 #maximum number of tokens per search query
-  max_summery_size: 512 #maximum number of tokens per summary text
-  num_images: 1 #Number of images to build
-  seed: -1 # seed
