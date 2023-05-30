@@ -62,7 +62,6 @@ class Processor(PAPScript):
     def process(self, text):
         if self.word_callback is not None:
             self.word_callback(text)
-        print(text,end="", flush=True)
         self.bot_says = self.bot_says + text
         if self.personality.detect_antiprompt(self.bot_says):
             print("Detected hallucination")
