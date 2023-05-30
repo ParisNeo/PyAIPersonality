@@ -90,19 +90,19 @@ class Processor(PAPScript):
         for j in range(self.config["nb_thoughts"]):
             print(f"============= Starting level {j} of the tree =====================")
             local_thoughts=[]
-            judgement_prompt = f"prompt:\n{prompt}\n"
+            judgement_prompt = f"## Subject:\n{prompt.strip()}\n"
             for i in range(self.config["nb_samples_per_thought"]):
                 print(f"\nThought {i+1}")
                 thought_prompt = f"""### Prompt:
 {prompt}
 ### Previous thoughts:
-{final_thoughts}
+{final_thoughts.strip()}
 ### Instruction: 
 Write the next thought. Please give a single thought. 
 ### Thought:"""
                 thought = self.generate(thought_prompt)
                 local_thoughts.append(thought.strip())
-                judgement_prompt += f"\n### Thought {i}:{thought}\n"
+                judgement_prompt += f"\n### Thought {i}:{thought.strip()}\n"
                 if step_callback is not None:
                     step_callback(f"\n### Thought {i+1}:\n"+thought,1)
             prompt_ids = ",".join([str(i) for i in range(self.config["nb_samples_per_thought"])])
@@ -116,8 +116,8 @@ Write the next thought. Please give a single thought.
                 if step_callback is not None:
                     step_callback(f"### Best local thought:\n{best_local_thought}",1)
             else:
-                print("Warning, the model made a wrond answer, taking random thought as the best")
-                final_thoughts.append(local_thoughts[random.randint(self.config["nb_samples_per_thought"])]) 
+                print("Warning, the model made a wrong answer, taking random thought as the best")
+                final_thoughts.append(local_thoughts[random.randint(0, self.config["nb_samples_per_thought"])]) 
                 if step_callback is not None:
                     step_callback(f"### Best local thought:\n{best_local_thought}",1)
 
