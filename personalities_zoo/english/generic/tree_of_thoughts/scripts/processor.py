@@ -97,51 +97,60 @@ class Processor(PAPScript):
         self.bot_says = ""
 
         # 1 first ask the model to formulate a query
-        final_thoughts = []
+        final_ideas = []
         summary_prompt = ""
-        for j in range(self.config["nb_thoughts"]):
+        for j in range(self.config.get("nb_ideas",3)):
             print(f"============= Starting level {j} of the tree =====================")
-            local_thoughts=[]
-            judgement_prompt = f"prompt:\n{prompt}\n"
-            for i in range(self.config["nb_samples_per_thought"]):
-                print(f"\nThought {i+1}")
-                thought_prompt = f"""### Prompt:
+            local_ideas=[]
+            judgement_prompt = f"### prompt:\n{prompt}\n"
+            for i in range(self.config["nb_samples_per_idea"]):
+                print(f"\nIdea {i+1}")
+                if len(final_ideas)>0:
+                    final_ideas_text = [f'Idea {n}:{i}' for n,i in enumerate(final_ideas)]
+                    idea_prompt = f"""### Instruction: 
+Write the next idea. Please give a single idea. 
+### Prompt:
 {prompt}
-### Previous thoughts:
-{final_thoughts}
-### Instruction: 
-Write the next thought. Please give a single thought. 
-### Thought:"""
-                thought = self.generate(thought_prompt)
-                local_thoughts.append(thought.strip())
-                judgement_prompt += f"\n### Thought {i}:{thought}\n"
+### Previous ideas:
+{final_ideas_text}
+### Idea:To"""
+                else:
+                    idea_prompt = f"""### Instruction: 
+Write the next idea. Please give a single idea. 
+### Prompt:
+{prompt}
+### Idea:"""
+                print(idea_prompt)
+                idea = self.generate(idea_prompt)
+                local_ideas.append(idea.strip())
+                judgement_prompt += f"\n### Idea {i}:{idea}\n"
                 if step_callback is not None:
-                    step_callback(f"\n### Thought {i+1}:\n"+thought,1)
-            prompt_ids = ",".join([str(i) for i in range(self.config["nb_samples_per_thought"])])
-            judgement_prompt += f"### Instruction: Which thought seems the most approcpriate. Answer the question by giving the best thought number without explanations.\nWhat is the best thought number {prompt_ids}?\n"
+                    step_callback(f"\n### Idea {i+1}:\n"+idea,1)
+            prompt_ids = ",".join([str(i) for i in range(self.config["nb_samples_per_idea"])])
+            judgement_prompt += f"### Instructions:\nWhich idea seems the most approcpriate. Answer the question by giving the best idea number without explanations.\nWhat is the best idea number {prompt_ids}?\n"
             print(judgement_prompt)
             self.bot_says = ""
-            best_local_thought = self.generate(judgement_prompt).strip()
-            number, index = find_matching_number([i for i in range(self.config["nb_samples_per_thought"])], best_local_thought)
+            best_local_idea = self.generate(judgement_prompt).strip()
+            number, index = find_matching_number([i for i in range(self.config["nb_samples_per_idea"])], best_local_idea)
             if index is not None:
                 print(f"Chosen thoght n:{number}")
-                final_thoughts.append(local_thoughts[number]) 
+                final_ideas.append(local_ideas[number]) 
                 if step_callback is not None:
-                    step_callback(f"### Best local thought:\n{best_local_thought}",1)
+                    step_callback(f"### Best local idea:\n{best_local_idea}",1)
             else:
-                print("Warning, the model made a wrond answer, taking random thought as the best")
-                number = random.randint(0,self.config["nb_samples_per_thought"])-1
+                print("Warning, the model made a wrond answer, taking random idea as the best")
+                number = random.randint(0,self.config["nb_samples_per_idea"])-1
                 print(f"Chosen thoght n:{number}")
-                final_thoughts.append(local_thoughts[number]) 
+                final_ideas.append(local_ideas[number]) 
                 if step_callback is not None:
-                    step_callback(f"### Best local thought:\n{best_local_thought}",1)
+                    step_callback(f"### Best local idea:\n{best_local_idea}",1)
 
-        summary_prompt += "### Instructions:\nCombine these thoughts in a comprihensive essai.\n"
-        for thought in final_thoughts:
-            summary_prompt += f"### Thought: {thought}\n"
-        summary_prompt += "### Thoughts summary:\n"
+        summary_prompt += "### Instructions:\nCombine these ideas in a comprihensive essai.\n"
+        for idea in final_ideas:
+            summary_prompt += f"### Idea: {idea}\n"
+        summary_prompt += "### Ideas summary:\n"
         print(summary_prompt)
-        best_local_thought = self.generate(summary_prompt)
-        return best_local_thought
+        best_local_idea = self.generate(summary_prompt)
+        return best_local_idea
 
 

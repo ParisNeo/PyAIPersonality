@@ -27,9 +27,9 @@ class Install:
         data = {
             'max_thought_size': 50,
             'max_judgement_size': 50,
-            'nb_samples_per_thought': 3,
+            'nb_samples_per_idea': 3,
             'max_summary_size':50,
-            'nb_thoughts':3
+            'nb_ideas':3
         }
         path = Path(__file__).parent.parent / 'config_local.yaml'
         with open(path, 'w') as file:
