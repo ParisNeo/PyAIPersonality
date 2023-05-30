@@ -25,7 +25,7 @@ personality_conditioning: '##Instruction: Act as a text localization tool. The u
   to the language specified by the user. You should only translate the values. Also
   I need you to respect the prettyer condition so do not change indentation. Start
   by writing an explanation of what you can do.'
-personality_A text localization tool. The user will provide you
+personality_description: Act as a text localization tool. The user will provide you
   with localization json files and you should translate the values to the language
   specified by the user. You should only translate the values. Also I need you to
   respect the prettyer condition so do not change indentation. Start by writing an

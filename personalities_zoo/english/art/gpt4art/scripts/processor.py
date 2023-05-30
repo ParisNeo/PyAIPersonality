@@ -1,3 +1,4 @@
+import subprocess
 from pathlib import Path
 import os
 import sys
@@ -5,7 +6,15 @@ sd_folder = Path(".") / "shared/sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
 from pyaipersonality import PAPScript, AIPersonality
+import urllib.parse
+import urllib.request
+import json
 import time
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+from functools import partial
 import sys
 import yaml
 import re

@@ -1,5 +1,19 @@
+import subprocess
 from pathlib import Path
+import os
+import sys
+sd_folder = Path(__file__).resolve().parent.parent / "sd"
+sys.path.append(str(sd_folder))
 from pyaipersonality import PAPScript, AIPersonality
+import urllib.parse
+import urllib.request
+import json
+import time
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+from functools import partial
 import sys
 import yaml
 import re
@@ -48,8 +62,7 @@ class Processor(PAPScript):
     def process(self, text):
         if self.word_callback is not None:
             self.word_callback(text)
-        print(text,end="")
-        sys.stdout.flush()
+        print(text,end="", flush=True)
         self.bot_says = self.bot_says + text
         if self.personality.detect_antiprompt(self.bot_says):
             print("Detected hallucination")
@@ -90,19 +103,19 @@ class Processor(PAPScript):
         for j in range(self.config["nb_thoughts"]):
             print(f"============= Starting level {j} of the tree =====================")
             local_thoughts=[]
-            judgement_prompt = f"## Subject:\n{prompt.strip()}\n"
+            judgement_prompt = f"prompt:\n{prompt}\n"
             for i in range(self.config["nb_samples_per_thought"]):
                 print(f"\nThought {i+1}")
                 thought_prompt = f"""### Prompt:
 {prompt}
 ### Previous thoughts:
-{final_thoughts.strip()}
+{final_thoughts}
 ### Instruction: 
 Write the next thought. Please give a single thought. 
 ### Thought:"""
                 thought = self.generate(thought_prompt)
                 local_thoughts.append(thought.strip())
-                judgement_prompt += f"\n### Thought {i}:{thought.strip()}\n"
+                judgement_prompt += f"\n### Thought {i}:{thought}\n"
                 if step_callback is not None:
                     step_callback(f"\n### Thought {i+1}:\n"+thought,1)
             prompt_ids = ",".join([str(i) for i in range(self.config["nb_samples_per_thought"])])
@@ -112,12 +125,15 @@ Write the next thought. Please give a single thought.
             best_local_thought = self.generate(judgement_prompt).strip()
             number, index = find_matching_number([i for i in range(self.config["nb_samples_per_thought"])], best_local_thought)
             if index is not None:
+                print(f"Chosen thoght n:{number}")
                 final_thoughts.append(local_thoughts[number]) 
                 if step_callback is not None:
                     step_callback(f"### Best local thought:\n{best_local_thought}",1)
             else:
-                print("Warning, the model made a wrong answer, taking random thought as the best")
-                final_thoughts.append(local_thoughts[random.randint(0, self.config["nb_samples_per_thought"])]) 
+                print("Warning, the model made a wrond answer, taking random thought as the best")
+                number = random.randint(0,self.config["nb_samples_per_thought"])-1
+                print(f"Chosen thoght n:{number}")
+                final_thoughts.append(local_thoughts[number]) 
                 if step_callback is not None:
                     step_callback(f"### Best local thought:\n{best_local_thought}",1)
 

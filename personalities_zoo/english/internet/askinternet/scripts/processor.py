@@ -89,6 +89,7 @@ class Processor(PAPScript):
     def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
         self.personality = personality
+        self.config = self.load_config_file()
 
     
     def internet_search(self, query):
@@ -102,7 +103,7 @@ class Processor(PAPScript):
             dict: The search result as a dictionary.
         """
         formatted_text = ""
-        results = extract_results(f"https://duckduckgo.com/?q={format_url_parameter(query)}&t=h_&ia=web", self.personality._processor_cfg["num_results"])
+        results = extract_results(f"https://duckduckgo.com/?q={format_url_parameter(query)}&t=h_&ia=web", self.config["num_results"])
         for result in results:
             title = result["title"]
             content = result["content"]

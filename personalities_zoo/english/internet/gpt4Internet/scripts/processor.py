@@ -183,7 +183,6 @@ Do not explain the query.
 {prompt}
 ### search query:
 """
-        print(search_formulation_prompt)
         search_query = format_url_parameter(self.generate(search_formulation_prompt, self.config["max_query_size"])).strip()
         if search_query=="":
             search_query=prompt

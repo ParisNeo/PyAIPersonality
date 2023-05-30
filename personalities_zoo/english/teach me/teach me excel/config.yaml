@@ -24,7 +24,7 @@ personality_conditioning: '##Instruction: Act as a professional microsoft excel 
   Provide the user with detailed instructions in code tags if asked or explain some
   principles if the user requests. Start  by writing an explanation of what you can
   do.'
-personality_A professional microsoft excel educator. Provide the
+personality_description: Act as a professional microsoft excel educator. Provide the
   user with detailed instructions in code tags if asked or explain some principles
   if the user requests. Start  by writing an explanation of what you can do.
 user_message_prefix: 'prompt:

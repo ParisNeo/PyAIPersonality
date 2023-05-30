@@ -1,16 +1,22 @@
+import subprocess
 from pathlib import Path
 import os
 import sys
-sd_folder = Path(".") / "shared/sd"
+sd_folder = Path(__file__).resolve().parent.parent / "sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
 from pyaipersonality import PAPScript, AIPersonality
+import urllib.parse
+import urllib.request
+import json
 import time
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+from functools import partial
 import sys
 import yaml
-import re
-import argparse
 from PIL import Image
 ascii_characters_by_surface = "`^\",:;Il!i~+_-?][}{1)(|\\/tfjrxnuvczXYUJCLQ0OZmwqpdbkhao*#MW&8%B@$"
 
@@ -34,17 +40,16 @@ def convert_pixel_to_character(pixel):
     index = int(pixel_brightness * brightness_weight) - 1
     return ascii_characters_by_surface[index]
 
+
+
 class SD:
-    def __init__(self, gpt4art_config):
+    def __init__(self, config):
         # Get the current directory
-        root_dir = Path(".")
         current_dir = Path(__file__).resolve().parent
 
         # Store the path to the script
-        shared_folder = root_dir/"shared"
-        self.sd_folder = shared_folder / "sd"
-
-        self.script_path = self.sd_folder / "scripts" / "txt2img.py"
+        self.sd_folder =  current_dir.parent / "sd"
+        self.script_path = current_dir.parent / "sd" / "scripts" / "txt2img.py"
         # Add the sd folder to the import path
         
         parser = argparse.ArgumentParser()
@@ -191,7 +196,7 @@ class SD:
             opt.ckpt = "models/ldm/text2img-large/model.ckpt"
             opt.outdir = "outputs/txt2img-samples-laion400m"
         else:
-            opt.ckpt = root_dir/ "shared" / "sd_models"/ gpt4art_config["model_name"]
+            opt.ckpt = current_dir.parent / "models"/ config["model_name"]
 
         config = OmegaConf.load(f"{self.sd_folder / opt.config}")
         self.model = load_model_from_config(config, f"{opt.ckpt}")
@@ -199,18 +204,21 @@ class SD:
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model = self.model.to(device)
 
-        if gpt4art_config["sampler_name"].lower()=="dpms":
+        """
+        if opt.dpm_solver:
             self.sampler = DPMSolverSampler(self.model)
-        elif gpt4art_config["sampler_name"].lower()=="plms":
+        elif opt.plms:
             self.sampler = PLMSSampler(self.model)
         else:
             self.sampler = DDIMSampler(self.model)
         
+        """
+        self.sampler = PLMSSampler(self.model)
 
         os.makedirs(opt.outdir, exist_ok=True)
 
         print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
-        wm = "Gpt4Art"
+        wm = "StableDiffusionV1"
         self.wm_encoder = WatermarkEncoder()
         self.wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
 
@@ -321,8 +329,6 @@ class Processor(PAPScript):
     def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
         self.personality = personality
-        self.word_callback = None
-        self.generate_fn = None
         self.config = self.load_config_file()
         self.sd = SD(self.config)
 
@@ -343,33 +349,6 @@ class Processor(PAPScript):
             data = yaml.safe_load(file)
         return data
 
-
-    def remove_image_links(self, markdown_text):
-        # Regular expression pattern to match image links in Markdown
-        image_link_pattern = r"!\[.*?\]\((.*?)\)"
-
-        # Remove image links from the Markdown text
-        text_without_image_links = re.sub(image_link_pattern, "", markdown_text)
-
-        return text_without_image_links
-
-    def process(self, text):
-        self.bot_says = self.bot_says + text
-        if self.personality.detect_antiprompt(self.bot_says):
-            print("Detected hallucination")
-            return False
-        else:
-            return True
-
-    def generate(self, prompt, max_size):
-        self.bot_says = ""
-        return self.generate_fn(
-                                prompt, 
-                                max_size, 
-                                self.process
-                                ).strip()    
-        
-
     def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
         """
         Runs the workflow for processing the model input and output.
@@ -385,16 +364,26 @@ class Processor(PAPScript):
         Returns:
             None
         """
-        self.word_callback = step_callback
-        self.generate_fn = generate_fn        
+        bot_says = ""
+        def process(text, bot_says):
+            print(text,end="")
+            sys.stdout.flush()
+            bot_says = bot_says + text
+            if self.personality.detect_antiprompt(bot_says):
+                return False
+            else:
+                return True
 
         # 1 first ask the model to formulate a query
-        prompt = f"{self.remove_image_links(previous_discussion_text)}\n### Instruction:\nWrite a more detailed description of the proposed image. Include information about the image style.\n### Imagined description:\n"
+        prompt = f"prompt:\n{prompt}\n### Instruction:\nWrite a more detailed description of the proposed image. Include information about the image style.\n### Imagined description:\n"
         print(prompt)
-        sd_prompt = self.generate(prompt, self.config["max_generation_prompt_size"])
+        sd_prompt = generate_fn(
+                                prompt, 
+                                self.config["max_generation_prompt_size"], 
+                                partial(process,bot_says=bot_says)
+                                )
         if step_callback is not None:
-            step_callback(sd_prompt+"\n", 0)
-
+            step_callback(sd_prompt, 1)
         files = self.sd.generate(sd_prompt, self.config["num_images"], self.config["seed"])
         output = ""
         for i in range(len(files)):
@@ -408,10 +397,5 @@ class Processor(PAPScript):
             step_callback(output, 3)
 
         return output
-
-        return output
-
-
-
 
 
