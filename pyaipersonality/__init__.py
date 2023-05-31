@@ -23,9 +23,11 @@ from pyaipersonality.binding import BindingConfig, LLMBinding
 
 class MSG_TYPE(Enum):
     MSG_TYPE_CHUNK=0
-    MSG_TYPE_META=1
-    MSG_TYPE_REF=2
-    MSG_TYPE_CODE=3
+    MSG_TYPE_FULL=1
+    MSG_TYPE_META=2
+    MSG_TYPE_REF=3
+    MSG_TYPE_CODE=4
+    MSG_TYPE_UI=5
 
 def is_package_installed(package_name):
     try:
@@ -105,7 +107,7 @@ class PAPScript:
     def __init__(self) -> None:
         pass
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
+    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -854,8 +856,8 @@ class AIPersonality:
         """
         for prompt in self.anti_prompts:
             if prompt.lower() in text.lower():
-                return True
-        return False
+                return prompt.lower()
+        return None
 
     def __str__(self):
         """

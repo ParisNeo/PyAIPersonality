@@ -155,7 +155,7 @@ class Processor(PAPScript):
         print(formatted_text)
         return formatted_text, results
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
+    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -170,7 +170,7 @@ class Processor(PAPScript):
         Returns:
             None
         """
-        self.word_callback = step_callback
+        self.word_callback = callback
         self.generate_fn = generate_fn        
 
         # 1 first ask the model to formulate a query
@@ -186,11 +186,11 @@ Do not explain the query.
         search_query = format_url_parameter(self.generate(search_formulation_prompt, self.config["max_query_size"])).strip()
         if search_query=="":
             search_query=prompt
-        if step_callback is not None:
-            step_callback("Crafted search query :"+search_query+"\nSearching...", 1)
+        if callback is not None:
+            callback("Crafted search query :"+search_query+"\nSearching...", 1)
         search_result, results = self.internet_search(search_query)
-        if step_callback is not None:
-            step_callback("Crafted search query :"+search_query+"\nSearching... OK\nSummerizing...", 1)
+        if callback is not None:
+            callback("Crafted search query :"+search_query+"\nSearching... OK\nSummerizing...", 1)
         prompt = f"""### Instructions:
 Use Search engine results to answer user question by summerizing the results in a single coherant paragraph in form of a markdown text with sources citation links in the format [index](source).
 Place the citation links in front of each relevant information.
@@ -209,8 +209,8 @@ Place the citation links in front of each relevant information.
             sources_text += f"[source : {link}]({href})\n\n"
 
         output = output+sources_text
-        if step_callback is not None:
-            step_callback(output, 1)
+        if callback is not None:
+            callback(output, 1)
 
         return output
 

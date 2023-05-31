@@ -2,23 +2,28 @@ import subprocess
 from pathlib import Path
 import os
 import sys
-sd_folder = Path(__file__).resolve().parent.parent / "sd"
+sd_folder = Path(".") / "shared/sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
 from pyaipersonality import PAPScript, AIPersonality
 import time
 
-from functools import partial
 import sys
+import yaml
+import re
+import argparse
 
 class SD:
-    def __init__(self, personality):
+    def __init__(self, gpt4art_config):
         # Get the current directory
+        root_dir = Path(".")
         current_dir = Path(__file__).resolve().parent
 
         # Store the path to the script
-        self.sd_folder =  current_dir.parent / "sd"
-        self.script_path = current_dir.parent / "sd" / "scripts" / "txt2img.py"
+        shared_folder = root_dir/"shared"
+        self.sd_folder = shared_folder / "sd"
+
+        self.script_path = self.sd_folder / "scripts" / "txt2img.py"
         # Add the sd folder to the import path
         
         parser = argparse.ArgumentParser()
@@ -82,7 +87,7 @@ class SD:
         parser.add_argument(
             "--n_iter",
             type=int,
-            default=2,
+            default=1,
             help="sample this often",
         )
         parser.add_argument(
@@ -165,40 +170,48 @@ class SD:
             opt.ckpt = "models/ldm/text2img-large/model.ckpt"
             opt.outdir = "outputs/txt2img-samples-laion400m"
         else:
-            opt.ckpt = current_dir.parent / "models"/ personality._processor_cfg["model_name"]
+            opt.ckpt = root_dir/ "shared" / "sd_models"/ gpt4art_config["model_name"]
 
+        opt.ddim_steps = gpt4art_config.get("ddim_steps",50)
+        opt.scale = gpt4art_config.get("scale",7.5)
+        opt.W = gpt4art_config.get("W",512)
+        opt.H = gpt4art_config.get("H",512)
+        opt.skip_grid = gpt4art_config.get("skip_grid",True)
+        opt.batch_size = gpt4art_config.get("batch_size",1)
+        opt.num_images = gpt4art_config.get("num_images",1)
+        
+        
+
+        
         config = OmegaConf.load(f"{self.sd_folder / opt.config}")
         self.model = load_model_from_config(config, f"{opt.ckpt}")
 
         device = torch.device("cuda") if torch.cuda.is_available() else torch.device("cpu")
         self.model = self.model.to(device)
 
-        """
-        if opt.dpm_solver:
+        if gpt4art_config["sampler_name"].lower()=="dpms":
             self.sampler = DPMSolverSampler(self.model)
-        elif opt.plms:
+        elif gpt4art_config["sampler_name"].lower()=="plms":
             self.sampler = PLMSSampler(self.model)
         else:
             self.sampler = DDIMSampler(self.model)
         
-        """
-        self.sampler = PLMSSampler(self.model)
 
         os.makedirs(opt.outdir, exist_ok=True)
 
         print("Creating invisible watermark encoder (see https://github.com/ShieldMnt/invisible-watermark)...")
-        wm = "Painter"
+        wm = "Gpt4Art"
         self.wm_encoder = WatermarkEncoder()
         self.wm_encoder.set_watermark('bytes', wm.encode('utf-8'))
 
 
         self.opt = opt
 
-    def generate(self, prompt, n_samples=1, seed = -1):
+    def generate(self, prompt, num_images=1, seed = -1):
         self.opt.seed=seed
-        self.opt.n_samples=n_samples
+        self.opt.num_images=num_images
         outpath = self.opt.outdir
-        batch_size = self.opt.n_samples
+        batch_size = 1
         n_rows = self.opt.n_rows if self.opt.n_rows > 0 else batch_size
         seed_everything(self.opt.seed)
 
@@ -227,7 +240,7 @@ class SD:
                 with self.model.ema_scope():
                     tic = time.time()
                     all_samples = list()
-                    for n in trange(self.opt.n_iter, desc="Sampling"):
+                    for n in trange(self.opt.num_images, desc="Sampling"):
                         for prompts in tqdm(data, desc="data"):
                             uc = None
                             if self.opt.scale != 1.0:
@@ -238,7 +251,7 @@ class SD:
                             shape = [self.opt.C, self.opt.H // self.opt.f, self.opt.W // self.opt.f]
                             samples_ddim, _ = self.sampler.sample(S=self.opt.ddim_steps,
                                                             conditioning=c,
-                                                            batch_size=self.opt.n_samples,
+                                                            batch_size=self.opt.batch_size,
                                                             shape=shape,
                                                             verbose=False,
                                                             unconditional_guidance_scale=self.opt.scale,
@@ -284,7 +297,7 @@ class SD:
         
         out_put_path = Path("outputs/txt2img-samples/samples")
         files =[f for f in out_put_path.iterdir()]
-        return files[-n_samples:]
+        return files[-num_images:]
         
 
    
@@ -298,9 +311,61 @@ class Processor(PAPScript):
     def __init__(self, personality: AIPersonality) -> None:
         super().__init__()
         self.personality = personality
-        self.sd = SD(personality)
+        self.word_callback = None
+        self.generate_fn = None
+        self.config = self.load_config_file()
+        self.sd = SD(self.config)
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
+    def load_config_file(self):
+        """
+        Load the content of config_local.yaml file.
+
+        The function reads the content of the config_local.yaml file and returns it as a Python dictionary.
+
+        Args:
+            None
+
+        Returns:
+            dict: A dictionary containing the loaded data from the config_local.yaml file.
+        """        
+        path = Path(__file__).parent.parent / 'config_local.yaml'
+        with open(path, 'r') as file:
+            data = yaml.safe_load(file)
+        return data
+
+
+    def remove_image_links(self, markdown_text):
+        # Regular expression pattern to match image links in Markdown
+        image_link_pattern = r"!\[.*?\]\((.*?)\)"
+
+        # Remove image links from the Markdown text
+        text_without_image_links = re.sub(image_link_pattern, "", markdown_text)
+
+        return text_without_image_links
+
+    def process(self, text):
+        bot_says = self.bot_says + text
+        if self.personality.detect_antiprompt(bot_says):
+            print("Detected hallucination")
+            return False
+        else:
+            self.bot_says = bot_says
+            return True
+
+    def generate(self, prompt, max_size):
+        self.bot_says = ""
+        return self.personality.model.generate(
+                                prompt, 
+                                max_size, 
+                                self.process,
+                                temperature=self.personality.model_temperature,
+                                top_k=self.personality.model_top_k,
+                                top_p=self.personality.model_top_p,
+                                repeat_penalty=self.personality.model_repeat_penalty,
+                                ).strip()    
+        
+
+    def run_workflow(self, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -311,31 +376,17 @@ class Processor(PAPScript):
                 The function should take a single argument (prompt) and return the generated text.
             prompt (str): The input prompt for the model.
             previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
-
+            callback a callback function that gets called each time a new token is received
         Returns:
             None
         """
-        bot_says = ""
-        def process(text, bot_says):
-            print(text,end="")
-            sys.stdout.flush()
-            bot_says = bot_says + text
-            if self.personality.detect_antiprompt(bot_says):
-                return False
-            else:
-                return True
+        self.word_callback = callback
 
-        # 1 first ask the model to formulate a query
-        prompt = f"prompt:\n{prompt}\n### Instruction:\nWrite a more detailed description of the proposed image. Include information about the image style.\n### Imagined description:\n"
-        print(prompt)
-        sd_prompt = prompt
-        files = self.sd.generate(sd_prompt, self.personality._processor_cfg["num_images"], self.personality._processor_cfg["seed"])
+        files = self.sd.generate(prompt, self.config["num_images"], self.config["seed"])
         output = ""
         for i in range(len(files)):
             files[i] = str(files[i]).replace("\\","/")
             output += f"![]({files[i]})\n"
-        if step_callback is not None:
-            step_callback(output, 3)
 
         return output
 

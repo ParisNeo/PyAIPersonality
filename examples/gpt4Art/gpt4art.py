@@ -52,15 +52,20 @@ if __name__=="__main__":
     if personality.welcome_message:
         print(personality.welcome_message)
 
-    full_discussion = personality.personality_conditioning+personality.ai_message_prefix+personality.welcome_message+personality.link_text
+    if personality.include_welcome_message_in_disucssion:
+        full_discussion = personality.personality_conditioning+personality.ai_message_prefix+personality.welcome_message+personality.link_text
+    else:
+        full_discussion = personality.personality_conditioning+personality.link_text
     while True:
         try:
             prompt = input("You: ")
             if prompt == '':
                 continue
-
+            def callback(message, type):
+                print(message)
+                return True
             print(f"{personality.name}:", end='')
-            output = personality.processor.run_workflow(prompt, full_discussion)
+            output = personality.processor.run_workflow(prompt, full_discussion, callback=callback)
             print(output)
             full_discussion += personality.user_message_prefix+prompt+personality.link_text+personality.ai_message_prefix
             full_discussion += output

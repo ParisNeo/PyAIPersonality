@@ -6,15 +6,8 @@ sd_folder = Path(".") / "shared/sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
 from pyaipersonality import PAPScript, AIPersonality
-import urllib.parse
-import urllib.request
-import json
 import time
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-from functools import partial
 import sys
 import yaml
 import re
@@ -94,7 +87,7 @@ class SD:
         parser.add_argument(
             "--n_iter",
             type=int,
-            default=2,
+            default=1,
             help="sample this often",
         )
         parser.add_argument(
@@ -179,6 +172,17 @@ class SD:
         else:
             opt.ckpt = root_dir/ "shared" / "sd_models"/ gpt4art_config["model_name"]
 
+        opt.ddim_steps = gpt4art_config.get("ddim_steps",50)
+        opt.scale = gpt4art_config.get("scale",7.5)
+        opt.W = gpt4art_config.get("W",512)
+        opt.H = gpt4art_config.get("H",512)
+        opt.skip_grid = gpt4art_config.get("skip_grid",True)
+        opt.batch_size = gpt4art_config.get("batch_size",1)
+        opt.num_images = gpt4art_config.get("num_images",1)
+        
+        
+
+        
         config = OmegaConf.load(f"{self.sd_folder / opt.config}")
         self.model = load_model_from_config(config, f"{opt.ckpt}")
 
@@ -203,11 +207,11 @@ class SD:
 
         self.opt = opt
 
-    def generate(self, prompt, n_samples=1, seed = -1):
+    def generate(self, prompt, num_images=1, seed = -1):
         self.opt.seed=seed
-        self.opt.n_samples=n_samples
+        self.opt.num_images=num_images
         outpath = self.opt.outdir
-        batch_size = self.opt.n_samples
+        batch_size = 1
         n_rows = self.opt.n_rows if self.opt.n_rows > 0 else batch_size
         seed_everything(self.opt.seed)
 
@@ -236,7 +240,7 @@ class SD:
                 with self.model.ema_scope():
                     tic = time.time()
                     all_samples = list()
-                    for n in trange(self.opt.n_iter, desc="Sampling"):
+                    for n in trange(self.opt.num_images, desc="Sampling"):
                         for prompts in tqdm(data, desc="data"):
                             uc = None
                             if self.opt.scale != 1.0:
@@ -247,7 +251,7 @@ class SD:
                             shape = [self.opt.C, self.opt.H // self.opt.f, self.opt.W // self.opt.f]
                             samples_ddim, _ = self.sampler.sample(S=self.opt.ddim_steps,
                                                             conditioning=c,
-                                                            batch_size=self.opt.n_samples,
+                                                            batch_size=self.opt.batch_size,
                                                             shape=shape,
                                                             verbose=False,
                                                             unconditional_guidance_scale=self.opt.scale,
@@ -293,7 +297,7 @@ class SD:
         
         out_put_path = Path("outputs/txt2img-samples/samples")
         files =[f for f in out_put_path.iterdir()]
-        return files[-n_samples:]
+        return files[-num_images:]
         
 
    
@@ -339,12 +343,33 @@ class Processor(PAPScript):
 
         return text_without_image_links
 
+    def remove_text_from_string(self, string, text_to_find):
+        """
+        Removes everything from the first occurrence of the specified text in the string (case-insensitive).
+
+        Parameters:
+        string (str): The original string.
+        text_to_find (str): The text to find in the string.
+
+        Returns:
+        str: The updated string.
+        """
+        index = string.lower().find(text_to_find.lower())
+
+        if index != -1:
+            string = string[:index]
+
+        return string
+    
     def process(self, text):
-        self.bot_says = self.bot_says + text
-        if self.personality.detect_antiprompt(self.bot_says):
+        bot_says = self.bot_says + text
+        antiprompt = self.personality.detect_antiprompt(bot_says)
+        if antiprompt:
+            self.bot_says = self.remove_text_from_string(bot_says,antiprompt)
             print("Detected hallucination")
             return False
         else:
+            self.bot_says = bot_says
             return True
 
     def generate(self, prompt, max_size):
@@ -360,7 +385,7 @@ class Processor(PAPScript):
                                 ).strip()    
         
 
-    def run_workflow(self, prompt, previous_discussion_text="", step_callback=None):
+    def run_workflow(self, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -371,21 +396,21 @@ class Processor(PAPScript):
                 The function should take a single argument (prompt) and return the generated text.
             prompt (str): The input prompt for the model.
             previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
-
+            callback a callback function that gets called each time a new token is received
         Returns:
             None
         """
-        self.word_callback = step_callback
+        self.word_callback = callback
 
         # 1 first ask the model to formulate a query
-        prompt = f"{self.remove_image_links(previous_discussion_text)}\n### Instruction:\nWrite a more detailed description of the proposed image. Include information about the image style.\n### Imagined description:\n"
+        prompt = f"{self.remove_image_links(previous_discussion_text+self.personality.user_message_prefix+prompt+self.personality.link_text+self.personality.ai_message_prefix)}\n"
         print(prompt)
         sd_prompt = self.generate(prompt, self.config["max_generation_prompt_size"])
-        if step_callback is not None:
-            step_callback(sd_prompt+"\n", 0)
+        if callback is not None:
+            callback(sd_prompt.strip()+"\n", 0)
 
-        files = self.sd.generate(sd_prompt, self.config["num_images"], self.config["seed"])
-        output = ""
+        files = self.sd.generate(sd_prompt.strip(), self.config["num_images"], self.config["seed"])
+        output = sd_prompt.strip()+"\n"
         for i in range(len(files)):
             files[i] = str(files[i]).replace("\\","/")
             output += f"![]({files[i]})\n"

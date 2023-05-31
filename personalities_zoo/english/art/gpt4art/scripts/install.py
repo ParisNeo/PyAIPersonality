@@ -65,6 +65,11 @@ class Install:
                 
             # Create configuration file
             self.create_config_file()
+
+            #Create the install file 
+            with open(install_file,"w") as f:
+                f.write("ok")
+            print("Installed successfully")
             
     def reinstall_pytorch_with_cuda(self):
         subprocess.run(["pip", "install", "torch", "torchvision", "torchaudio", "--no-cache-dir", "--index-url", "https://download.pytorch.org/whl/cu117"])
@@ -85,9 +90,15 @@ class Install:
         data = {
             "model_name": "DreamShaper_5_beta2_noVae_half_pruned.ckpt",     # good
             "max_generation_prompt_size": 512,                              # maximum number of tokens per generation prompt
-            "num_images": 1,                                                # Number of images to build
-            "sampler_name":"plms",
-            "seed": -1                                                      # seed
+            "batch_size": 1,                                                # Number of images to build for each batch
+            "sampler_name":"plms",                                          # Sampler name plms dpms ddim, 
+            "seed": -1,                                                     # seed
+            "ddim_steps":50,                                                # Number of sampling steps
+            "scale":7.5,                                                    # Scale
+            "W":512,                                                        # Width
+            "H":512,                                                        # Height
+            "skip_grid":True,                                               # Don't generate grid
+            "num_images":1                                                  #Number of images to generate
         }
         path = Path(__file__).parent.parent / 'config_local.yaml'
         with open(path, 'w') as file:

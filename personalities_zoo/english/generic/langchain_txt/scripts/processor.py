@@ -63,9 +63,29 @@ class Processor(PAPScript):
         self.vector_store = FAISS.from_texts(self.chunks, embedding=self.model)
         print("Vectorization done successfully")
 
-   
+    def process(self, text):
+        bot_says = self.bot_says + text
+        if self.personality.detect_antiprompt(bot_says):
+            print("Detected hallucination")
+            return False
+        else:
+            self.bot_says = bot_says
+            return True
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
+    def generate(self, prompt, max_size):
+        self.bot_says = ""
+        return self.personality.model.generate(
+                                prompt, 
+                                max_size, 
+                                self.process,
+                                temperature=self.personality.model_temperature,
+                                top_k=self.personality.model_top_k,
+                                top_p=self.personality.model_top_p,
+                                repeat_penalty=self.personality.model_repeat_penalty,
+                                ).strip()    
+        
+
+    def run_workflow(self, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -76,13 +96,13 @@ class Processor(PAPScript):
                 The function should take a single argument (prompt) and return the generated text.
             prompt (str): The input prompt for the model.
             previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
-
+            callback a callback function that gets called each time a new token is received
         Returns:
             None
         """
         output =""
         docs = self.vector_store.similarity_search(prompt, k=3)
-        chain = load_qa_chain(llm=LlamaCpp(model_path="models/llama_cpp_official/Wizard-Vicuna-7B-Uncensored.ggmlv2.q4_0.bin"), chain_type="stuff")
+        chain = load_qa_chain(llm=self.personality.model, chain_type="stuff")
         response = chain.run(input_documents=docs, question=prompt)
         print(f"response: {response}")
 

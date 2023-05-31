@@ -325,8 +325,49 @@ class Processor(PAPScript):
         with open(path, 'r') as file:
             data = yaml.safe_load(file)
         return data
+    def remove_text_from_string(self, string, text_to_find):
+        """
+        Removes everything from the first occurrence of the specified text in the string (case-insensitive).
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
+        Parameters:
+        string (str): The original string.
+        text_to_find (str): The text to find in the string.
+
+        Returns:
+        str: The updated string.
+        """
+        index = string.lower().find(text_to_find.lower())
+
+        if index != -1:
+            string = string[:index]
+
+        return string
+    
+    def process(self, text):
+        bot_says = self.bot_says + text
+        antiprompt = self.personality.detect_antiprompt(bot_says)
+        if antiprompt:
+            self.bot_says = self.remove_text_from_string(bot_says,antiprompt)
+            print("Detected hallucination")
+            return False
+        else:
+            self.bot_says = bot_says
+            return True
+
+    def generate(self, prompt, max_size):
+        self.bot_says = ""
+        return self.personality.model.generate(
+                                prompt, 
+                                max_size, 
+                                self.process,
+                                temperature=self.personality.model_temperature,
+                                top_k=self.personality.model_top_k,
+                                top_p=self.personality.model_top_p,
+                                repeat_penalty=self.personality.model_repeat_penalty,
+                                ).strip()    
+        
+
+    def run_workflow(self, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -337,38 +378,30 @@ class Processor(PAPScript):
                 The function should take a single argument (prompt) and return the generated text.
             prompt (str): The input prompt for the model.
             previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
-
+            callback a callback function that gets called each time a new token is received
         Returns:
             None
         """
-        bot_says = ""
-        def process(text, bot_says):
-            print(text,end="")
-            sys.stdout.flush()
-            bot_says = bot_says + text
-            if self.personality.detect_antiprompt(bot_says):
-                return False
-            else:
-                return True
+        self.word_callback = callback
 
         # 1 first ask the model to formulate a query
-        prompt = f"prompt:\n{prompt}\n### Instruction:\nWrite a more detailed description of the proposed image. Include information about the image style.\n### Imagined description:\n"
+        prompt = f"""
+{self.remove_image_links(previous_discussion_text+self.personality.user_message_prefix+prompt)}
+### Output :
+"""
         print(prompt)
-        sd_prompt = generate_fn(
-                                prompt, 
-                                self.config["max_generation_prompt_size"], 
-                                partial(process,bot_says=bot_says)
-                                )
-        if step_callback is not None:
-            step_callback(sd_prompt, 1)
+        sd_prompt = self.generate(prompt, self.config["max_generation_prompt_size"])
+        if callback is not None:
+            callback(sd_prompt+"\n", 0)
+
         files = self.sd.generate(sd_prompt, self.config["num_images"], self.config["seed"])
-        output = ""
+        output = "Prompt :\n"+sd_prompt.strip()+"\n"
         for i in range(len(files)):
             files[i] = str(files[i]).replace("\\","/")
             output += f"![]({files[i]})\n"
-        if step_callback is not None:
-            step_callback(output, 3)
 
         return output
+
+
 
 

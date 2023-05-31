@@ -49,7 +49,7 @@ class Processor(PAPScript):
 
     
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
+    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 

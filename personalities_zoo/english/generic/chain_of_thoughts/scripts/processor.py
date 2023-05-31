@@ -4,19 +4,21 @@ import os
 import sys
 sd_folder = Path(__file__).resolve().parent.parent / "sd"
 sys.path.append(str(sd_folder))
-from pyaipersonality import PAPScript, AIPersonality
-import urllib.parse
-import urllib.request
-import json
-import time
-
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
-from functools import partial
+from pyaipersonality import PAPScript, AIPersonality, MSG_TYPE
 import sys
 import yaml
-  
+import random
+import re
+
+def find_matching_number(numbers, text):
+    for index, number in enumerate(numbers):
+        number_str = str(number)
+        pattern = r"\b" + number_str + r"\b"  # Match the whole word
+        match = re.search(pattern, text)
+        if match:
+            return number, index
+    return None, None  # No matching number found
+
 class Processor(PAPScript):
     """
     A class that processes model inputs and outputs.
@@ -46,7 +48,51 @@ class Processor(PAPScript):
             data = yaml.safe_load(file)
         return data
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None, word_callback=None):
+    def remove_text_from_string(self, string, text_to_find):
+        """
+        Removes everything from the first occurrence of the specified text in the string (case-insensitive).
+
+        Parameters:
+        string (str): The original string.
+        text_to_find (str): The text to find in the string.
+
+        Returns:
+        str: The updated string.
+        """
+        index = string.lower().find(text_to_find.lower())
+
+        if index != -1:
+            string = string[:index]
+
+        return string
+    
+    def process(self, text):
+        bot_says = self.bot_says + text
+        antiprompt = self.personality.detect_antiprompt(bot_says)
+        if antiprompt:
+            self.bot_says = self.remove_text_from_string(bot_says,antiprompt)
+            print("Detected hallucination")
+            return False
+        else:
+            self.bot_says = bot_says
+            if self.callback is not None:
+                self.callback(text,MSG_TYPE.MSG_TYPE_CHUNK)            
+            return True
+
+    def generate(self, prompt, max_size):
+        self.bot_says = ""
+        return self.personality.model.generate(
+                                prompt, 
+                                max_size, 
+                                self.process,
+                                temperature=self.personality.model_temperature,
+                                top_k=self.personality.model_top_k,
+                                top_p=self.personality.model_top_p,
+                                repeat_penalty=self.personality.model_repeat_penalty,
+                                ).strip()    
+        
+
+    def run_workflow(self, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -57,50 +103,73 @@ class Processor(PAPScript):
                 The function should take a single argument (prompt) and return the generated text.
             prompt (str): The input prompt for the model.
             previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
-            step_callback
+            callback a callback function that gets called each time a new token is received
         Returns:
             None
         """
         bot_says = ""
-        def process(text, bot_says):
-            if word_callback is not None:
-                word_callback(text)
-            print(text,end="")
-            sys.stdout.flush()
-            bot_says = bot_says + text
-            if self.personality.detect_antiprompt(bot_says):
-                return False
-            else:
-                return True
-
+        self.callback = callback
         # 1 first ask the model to formulate a query
-        thoughts = []
-        judgement_prompt = f"prompt:\n{prompt}\n"
-        for i in range(self.personality._processor_cfg["nb_samples_per_thought"]):
-            print(f"\nThought {i+1}")
-            thought_prompt = f"""### Instruction: Write a single short sentence to describe a useful thought about this prompt.
-### Prompt:{prompt}
-### Thought:"""
-            thought = generate_fn(
-                                thought_prompt, 
-                                self.personality._processor_cfg["max_thought_size"], 
-                                partial(process,bot_says=bot_says)
-                                )
-            thoughts.append(thought.strip())
-            judgement_prompt += f"\n### Thought {i+1}:{thought}:\n"
-            if step_callback is not None:
-                step_callback(f"\n### Thought {i+1}:\n",0)
-                step_callback(thought,0)
-        judgement_prompt += "### Instruction: Judge the previous thoughts and rewrite the best one\n### Best Thought:"
-        print(judgement_prompt)
-        judgement_thought = generate_fn(
-                                judgement_prompt, 
-                                self.config["max_judgement_size"], 
-                                partial(process,bot_says=bot_says)
-                                )
-        
+        final_ideas = []
+        summary_prompt = ""
+        for j in range(self.config.get("nb_ideas",3)):
+            print(f"============= Starting level {j} of the tree =====================")
+            local_ideas=[]
+            judgement_prompt = f"## Prompt:\n{prompt}\n"
+            for i in range(self.config["nb_samples_per_idea"]):
+                print(f"\nIdea {i+1}")
+                if len(final_ideas)>0:
+                    final_ideas_text = "\n".join([f'Idea {n}: {i}' for n,i in enumerate(final_ideas)])
+                    idea_prompt = f"""## Instruction: 
+Write the next idea. Please give a single idea. 
+## Prompt:
+{prompt}
+## Previous ideas:
+{final_ideas_text}
+## Idea: One idea is"""
+                else:
+                    idea_prompt = f"""### Instruction: 
+Write one idea. Do not give multiple ideas. 
+## Prompt:
+{prompt}
+## Idea: One idea is"""
+                print(idea_prompt,end="",flush=True)
+                idea = "One idea is "+self.generate(idea_prompt, self.config["max_thought_size"]).strip()
+                local_ideas.append(idea)
+                judgement_prompt += f"\n### Idea {i}: {idea}\n"
+                if callback is not None:
+                    callback(f"\n### Idea {i+1}:\n"+idea,1)
+            prompt_ids = ",".join([str(i) for i in range(self.config["nb_samples_per_idea"])])
+            judgement_prompt += f"""### Question:
+Which idea seems the most approcpriate. Answer the question by giving the best idea number without explanations.
+What is the best idea number {prompt_ids}?
+## Answer: The best idea is idea number
+"""
+            print(judgement_prompt,end="",flush=True)
+            self.bot_says = ""
+            best_local_idea = self.generate(judgement_prompt, self.config["max_judgement_size"]).strip()
+            number, index = find_matching_number([i for i in range(self.config["nb_samples_per_idea"])], best_local_idea)
+            if index is not None:
+                print(f"--- Chosen idea n:{number}")
+                final_ideas.append(local_ideas[number]) 
+                if callback is not None:
+                    callback(f"## Best local idea:\n{best_local_idea}",1)
+            else:
+                print("Warning, the model made a wrond answer, taking random idea as the best")
+                number = random.randint(0,self.config["nb_samples_per_idea"])-1
+                print(f"--- Chosen idea n:{number}")
+                final_ideas.append(local_ideas[number]) 
+                if callback is not None:
+                    callback(f"### Best local idea:\n{best_local_idea}",1)
 
-        step_callback("### Best thought:\n",0)
-        return judgement_thought
+        summary_prompt += f"""## Instructions:
+Combine these ideas in a comprihensive and detailed essai that explains how to answer the user's question:\n{prompt}
+"""
+        for idea in final_ideas:
+            summary_prompt += f"## Idea: {idea}\n"
+        summary_prompt += "## Essai:"
+        print(summary_prompt)
+        best_local_idea = self.generate(summary_prompt, self.config["max_summary_size"])
+        return best_local_idea
 
 

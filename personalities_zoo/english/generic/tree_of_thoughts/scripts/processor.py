@@ -59,25 +59,30 @@ class Processor(PAPScript):
             data = yaml.safe_load(file)
         return data
     
+
     def process(self, text):
-        if self.word_callback is not None:
-            self.word_callback(text)
-        self.bot_says = self.bot_says + text
-        if self.personality.detect_antiprompt(self.bot_says):
+        bot_says = self.bot_says + text
+        if self.personality.detect_antiprompt(bot_says):
             print("Detected hallucination")
             return False
         else:
+            self.bot_says = bot_says
             return True
 
-    def generate(self, prompt):
+    def generate(self, prompt, max_size):
         self.bot_says = ""
-        return self.generate_fn(
+        return self.personality.model.generate(
                                 prompt, 
-                                self.config["max_judgement_size"], 
-                                self.process
-                                ).strip()        
+                                max_size, 
+                                self.process,
+                                temperature=self.personality.model_temperature,
+                                top_k=self.personality.model_top_k,
+                                top_p=self.personality.model_top_p,
+                                repeat_penalty=self.personality.model_repeat_penalty,
+                                ).strip()    
+        
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None, word_callback=None):
+    def run_workflow(self, prompt, previous_discussion_text="", callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -88,12 +93,11 @@ class Processor(PAPScript):
                 The function should take a single argument (prompt) and return the generated text.
             prompt (str): The input prompt for the model.
             previous_discussion_text (str, optional): The text of the previous discussion. Default is an empty string.
-            step_callback
+            callback a callback function that gets called each time a new token is received
         Returns:
             None
         """
-        self.generate_fn = generate_fn
-        self.word_callback = word_callback
+        self.word_callback = callback
         self.bot_says = ""
 
         # 1 first ask the model to formulate a query
@@ -124,8 +128,8 @@ Write the next idea. Please give a single idea.
                 idea = self.generate(idea_prompt)
                 local_ideas.append(idea.strip())
                 judgement_prompt += f"\n### Idea {i}:{idea}\n"
-                if step_callback is not None:
-                    step_callback(f"\n### Idea {i+1}:\n"+idea,1)
+                if callback is not None:
+                    callback(f"\n### Idea {i+1}:\n"+idea,1)
             prompt_ids = ",".join([str(i) for i in range(self.config["nb_samples_per_idea"])])
             judgement_prompt += f"### Instructions:\nWhich idea seems the most approcpriate. Answer the question by giving the best idea number without explanations.\nWhat is the best idea number {prompt_ids}?\n"
             print(judgement_prompt)
@@ -135,15 +139,15 @@ Write the next idea. Please give a single idea.
             if index is not None:
                 print(f"Chosen thoght n:{number}")
                 final_ideas.append(local_ideas[number]) 
-                if step_callback is not None:
-                    step_callback(f"### Best local idea:\n{best_local_idea}",1)
+                if callback is not None:
+                    callback(f"### Best local idea:\n{best_local_idea}",1)
             else:
                 print("Warning, the model made a wrond answer, taking random idea as the best")
                 number = random.randint(0,self.config["nb_samples_per_idea"])-1
                 print(f"Chosen thoght n:{number}")
                 final_ideas.append(local_ideas[number]) 
-                if step_callback is not None:
-                    step_callback(f"### Best local idea:\n{best_local_idea}",1)
+                if callback is not None:
+                    callback(f"### Best local idea:\n{best_local_idea}",1)
 
         summary_prompt += "### Instructions:\nCombine these ideas in a comprihensive essai.\n"
         for idea in final_ideas:

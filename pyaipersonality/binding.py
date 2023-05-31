@@ -57,7 +57,7 @@ DEFAULT_CONFIG = {
 
 class BindingConfig:
     def __init__(self, file_path=None):
-        self.file_path = file_path
+        self.file_path = Path(file_path)
         self.config = None
         
         if file_path is not None:
