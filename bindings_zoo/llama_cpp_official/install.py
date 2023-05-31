@@ -1,7 +1,5 @@
 import subprocess
 from pathlib import Path
-import requests
-from tqdm import tqdm
 
 class Install:
     def __init__(self, api=None):

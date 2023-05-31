@@ -8,7 +8,7 @@ import argparse
 
 
 def build_model(bindings_path:Path, cfg: BindingConfig):
-    binding_path = Path("bindings")/cfg["binding"]
+    binding_path = Path(bindings_path)/cfg["binding"]
     # first find out if there is a requirements.txt file
     install_file_name="install.py"
     install_script_path = binding_path / install_file_name        
@@ -21,6 +21,8 @@ def build_model(bindings_path:Path, cfg: BindingConfig):
             module.Install(None)
     # define the full absolute path to the module
     absolute_path = binding_path.resolve()            
+    # infer the module name from the file path
+    module_name = binding_path.stem    
     # use importlib to load the module from the file path
     loader = importlib.machinery.SourceFileLoader(module_name, str(absolute_path/"__init__.py"))
     binding_module = loader.load_module()
@@ -58,15 +60,17 @@ def handle_generate_text(data):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--config', '-cfg', default=None, help='Path to the configuration file')
-    parser.add_argument('--bindings_path', '-p', default="bindings_zoo", help='Binding path')
+    parser.add_argument('--config', '-cfg', default="configs/config.yaml", help='Path to the configuration file')
+    parser.add_argument('--bindings_path', '-bp', default="bindings_zoo", help='Binding path')
     parser.add_argument('--binding', '-b', default=None, help='Binding value')
+    parser.add_argument('--personality', '-p', default=None, help='Path to the personality folder')
     parser.add_argument('--model_name', '-m', default=None, help='Model name')
     args = parser.parse_args()
-    cfg = BindingConfig(Path(args.indings_path) ,args.config)
+    cfg = BindingConfig(args.config)
     if args.binding:
         cfg.binding = args.binding
-    if args.model:
+    if args.model_name:
         cfg.model = args.model_name
-    build_model()
+    model = build_model(args.bindings_path, cfg)
+    personality = AIPersonality()
     socketio.run(app)
