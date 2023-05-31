@@ -1,4 +1,80 @@
 from pyaipersonality import AIPersonality
+from pyaipersonality.binding import BindingConfig
+
+from pathlib import Path
+import urllib.request
+import sys
+import bindings_zoo.llama_cpp_official as llm_binding
+import bindings_zoo.llama_cpp_official.install as llm_binding_installer
+
+import os
+
+from tqdm import tqdm
+import random
+
+# Install binding if not installed yet 
+
+
+def build_model(cfg: BindingConfig):
+    llm_binding_installer.Install()
+    model = llm_binding.LLAMACPP(cfg)
+    return model
+
+# You need to install llama-cpp-python from pypi:
+# pip install llama-cpp-python
+
+if __name__=="__main__":
+
+    # choose your model
+    # undomment the model you want to use
+    # These models can be automatically downloaded
+    url = "https://huggingface.co/CRD716/ggml-vicuna-1.1-quantized/resolve/main/legacy-ggml-vicuna-7B-1.1-q4_0.bin"
+    personality_path = "personalities_zoo/english/art/gpt4art"
+
+    model_name  = url.split("/")[-1]
+
+    cfg = BindingConfig()
+    cfg.binding = llm_binding.binding_folder_name
+    cfg.model = model_name
+    if not cfg.check_model_existance():
+        cfg.download_model(url)
+
+    model = build_model(cfg)
+    personality = AIPersonality(personality_path, model)
+
+    # If there is a disclaimer, show it
+    if personality.disclaimer!="":
+        print()
+        print("Disclaimer")
+        print(personality.disclaimer)
+        print()
+    
+    if personality.welcome_message:
+        print(personality.welcome_message)
+
+    full_discussion = personality.personality_conditioning+personality.ai_message_prefix+personality.welcome_message+personality.link_text
+    while True:
+        try:
+            prompt = input("You: ")
+            if prompt == '':
+                continue
+
+            print(f"{personality.name}:", end='')
+            output = personality.processor.run_workflow(prompt, full_discussion)
+            print(output)
+            full_discussion += personality.user_message_prefix+prompt+personality.link_text+personality.ai_message_prefix
+            full_discussion += output
+
+
+        except KeyboardInterrupt:
+            print("Keyboard interrupt detected.\nBye")
+            break
+    print("Done")
+    print(f"{personality}")
+
+
+
+from pyaipersonality import AIPersonality
 from llama_cpp import Llama
 
 from pathlib import Path
@@ -8,6 +84,7 @@ import os
 
 from tqdm import tqdm
 import random
+from functools import partial
 
 def build_model(url):
     model = Llama(
@@ -18,7 +95,7 @@ def build_model(url):
             )
     return model
 
-def generate_output(model, prompt, callback=None):
+def generate_output(model, prompt, max_tokens, callback=None):
     output=""
     model.reset()
     tokens = model.tokenize(prompt.encode())
@@ -30,7 +107,7 @@ def generate_output(model, prompt, callback=None):
                     top_p=personality.model_top_p,
                     repeat_penalty=personality.model_repeat_penalty
                 ):
-        if count >= personality.model_n_predicts or (tok == model.token_eos()):
+        if count >= max_tokens or (tok == model.token_eos()):
             break
         word = model.detokenize([tok]).decode()
         count += 1
@@ -39,6 +116,10 @@ def generate_output(model, prompt, callback=None):
         # Use Hallucination suppression system
         if personality.detect_antiprompt(output):
             break
+        
+        if callback is not None:
+            if not callback(word):
+                break
         else:
             print(f"{word}", end='', flush=True)
     print()
@@ -80,8 +161,9 @@ if __name__=="__main__":
             print("Error downloading file:", e)
             sys.exit(1)
 
-    personality = AIPersonality("personalities_zoo/english/internet/gpt4internetv0")
+    personality = AIPersonality("personalities_zoo/english/art/gpt4art")
     model = build_model(url)
+    generation_function = partial(generate_output, model)
 
     # If there is a disclaimer, show it
     if personality.disclaimer!="":
@@ -100,18 +182,11 @@ if __name__=="__main__":
             if prompt == '':
                 continue
 
-            preprocessed_prompt = personality.processor.process_model_input(prompt)
-            if preprocessed_prompt is not None:
-                full_discussion+=personality.user_message_prefix+preprocessed_prompt+personality.link_text+personality.ai_message_prefix
-            else:
-                full_discussion+=personality.user_message_prefix+preprocessed_prompt+personality.link_text+personality.ai_message_prefix
-
             print(f"{personality.name}:", end='')
-
-            output = generate_output(model, full_discussion)
-
-            if personality.processor.process_model_output is not None:
-                output = personality.processor.process_model_output(output)
+            output = personality.processor.run_workflow(generation_function, prompt, full_discussion)
+            print(output)
+            full_discussion += personality.user_message_prefix+prompt+personality.link_text+personality.ai_message_prefix
+            full_discussion += output
 
         except KeyboardInterrupt:
             print("Keyboard interrupt detected.\nBye")

@@ -19,6 +19,8 @@ import subprocess
 import pkg_resources
 from enum import Enum
 
+from pyaipersonality.binding import BindingConfig, LLMBinding
+
 class MSG_TYPE(Enum):
     MSG_TYPE_CHUNK=0
     MSG_TYPE_META=1
@@ -161,7 +163,7 @@ class AIPersonality:
         "time": datetime.now().strftime("%H:%M:%S"), # Replaces {{time}} with actual time
     }
     
-    def __init__(self, personality_package_path: str|Path = None, run_scripts=True):
+    def __init__(self, personality_package_path: str|Path = None, model:LLMBinding=None, run_scripts=True):
         """
         Initialize an AIPersonality instance.
 
@@ -171,6 +173,7 @@ class AIPersonality:
         Raises:
         ValueError: If the provided path is not a folder or does not contain a config.yaml file.
         """
+        self.model = model
 
         # First setup a default personality
         # Version

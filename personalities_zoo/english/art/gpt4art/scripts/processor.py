@@ -349,14 +349,18 @@ class Processor(PAPScript):
 
     def generate(self, prompt, max_size):
         self.bot_says = ""
-        return self.generate_fn(
+        return self.personality.model.generate(
                                 prompt, 
                                 max_size, 
-                                self.process
+                                self.process,
+                                temperature=self.personality.model_temperature,
+                                top_k=self.personality.model_top_k,
+                                top_p=self.personality.model_top_p,
+                                repeat_penalty=self.personality.model_repeat_penalty,
                                 ).strip()    
         
 
-    def run_workflow(self, generate_fn, prompt, previous_discussion_text="", step_callback=None):
+    def run_workflow(self, prompt, previous_discussion_text="", step_callback=None):
         """
         Runs the workflow for processing the model input and output.
 
@@ -372,7 +376,6 @@ class Processor(PAPScript):
             None
         """
         self.word_callback = step_callback
-        self.generate_fn = generate_fn        
 
         # 1 first ask the model to formulate a query
         prompt = f"{self.remove_image_links(previous_discussion_text)}\n### Instruction:\nWrite a more detailed description of the proposed image. Include information about the image style.\n### Imagined description:\n"
