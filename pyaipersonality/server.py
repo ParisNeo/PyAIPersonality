@@ -1,10 +1,11 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
 from pyaipersonality import AIPersonality
 from pyaipersonality.binding import BindingConfig
 import importlib
 from pathlib import Path
 import argparse
+import logging
 
 
 def build_model(bindings_path:Path, cfg: BindingConfig):
@@ -34,32 +35,49 @@ def build_model(bindings_path:Path, cfg: BindingConfig):
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key'
 socketio = SocketIO(app)
+# Set log level to warning
+app.logger.setLevel(logging.WARNING)
+# Configure a custom logger for Flask-SocketIO
+socketio_log = logging.getLogger('socketio')
+socketio_log.setLevel(logging.WARNING)
+socketio_log.addHandler(logging.StreamHandler())
 
-
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 @socketio.on('connect')
 def handle_connect():
-    print('Client connected')
+    session_id = request.sid
+    print(f'Client connected with session ID: {session_id}')
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print('Client disconnected')
+    session_id = request.sid
+    print(f'Client disconnected with session ID: {session_id}')
+
 
 @socketio.on('generate_text')
 def handle_generate_text(data):
     # Placeholder code for text generation
     # Replace this with your actual text generation logic
+    session_id = request.sid
     prompt = data['prompt']
     generated_text = f"Generated text for '{prompt}'"
+    print(f"Text generation requested by client :{session_id}")
 
+    def callback(text):
+        print(text,end="",flush=True)
+        # Emit the generated text to the client
+        emit('text_chunk', {'chunk': text})
+        return True
+
+    generated_text = model.generate(prompt, new_text_callback=callback)
+    
     # Emit the generated text to the client
     emit('text_generated', {'text': generated_text})
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument('--host', '-hst', default="localhost", help='Host name')
+    parser.add_argument('--port', '-prt', default="9600", help='Port number')
     parser.add_argument('--config', '-cfg', default="configs/config.yaml", help='Path to the configuration file')
     parser.add_argument('--bindings_path', '-bp', default="bindings_zoo", help='Binding path')
     parser.add_argument('--binding', '-b', default=None, help='Binding value')
@@ -73,4 +91,4 @@ if __name__ == '__main__':
         cfg.model = args.model_name
     model = build_model(args.bindings_path, cfg)
     personality = AIPersonality()
-    socketio.run(app)
+    socketio.run(app, host=args.host, port=args.port)

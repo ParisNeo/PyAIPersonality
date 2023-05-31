@@ -154,7 +154,7 @@ class LLMModel(LLM):
     @property
     def _llm_type(self) -> str:
         """Return type of llm."""
-        return "llama.cpp"
+        return "pyaipersonality_generic_llm"
 
     def _get_parameters(self, stop: Optional[List[str]] = None) -> Dict[str, Any]:
         """
@@ -187,7 +187,7 @@ class LLMModel(LLM):
         stop: Optional[List[str]] = None,
         run_manager: Optional[CallbackManagerForLLMRun] = None,
     ) -> str:
-        """Call the Llama model and return the output.
+        """Call the model and return the output.
 
         Args:
             prompt: The prompt to use for generation.
