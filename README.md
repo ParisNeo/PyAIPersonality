@@ -25,7 +25,7 @@ pip install pyaipersonality
 
 We also offer a generic backend that allows you to access multiple 
 ```bash
-pyaipersonality-server -b <the path to the bindings folder> -m <the name of the model file> -p <a list of personalities paths>
+pyaipersonality-server -b <the name of the binding> -m <the name of the model file> -p <a list of personalities paths>
 ```
 
 for example:
