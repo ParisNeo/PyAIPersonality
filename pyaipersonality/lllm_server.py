@@ -182,7 +182,7 @@ def main():
     for p in args.personalities:
         personality = AIPersonality(p)
         personalities[personality.name] = personality
-
+    print("running...")
     socketio.run(app, host=args.host, port=args.port)
 
 if __name__ == '__main__':

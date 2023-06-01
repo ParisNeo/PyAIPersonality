@@ -96,6 +96,7 @@ class MainWindow(QMainWindow):
 
         self.statusbar = QStatusBar()
         self.personality_combo_box = QComboBox()
+        self.personality_combo_box.setMinimumWidth(500)
 
         self.connect_action = QAction(QIcon(str(Path(__file__).parent/'assets/connected.svg')), "", self)
         self.connect_action.setCheckable(True)
@@ -137,8 +138,9 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def submit_text(self):
-        prompt = self.user_text.toPlainText()
-        self.text_edit.insertPlainText("User:"+prompt+"\n")
+        prompt = self.user_text.text()
+        self.selected_personality = self.personality_combo_box.currentText()
+        self.text_edit.insertPlainText("User:"+prompt+"\n"+self.selected_personality+":")
         self.connector.generate_text(prompt)
 
     @pyqtSlot(str)
@@ -147,7 +149,7 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(str)
     def handle_text_generated(self, text):
-        self.text_edit.append(text)
+        pass#self.text_edit.append(text)
 
     @pyqtSlot()
     def handle_connection_failed(self):
