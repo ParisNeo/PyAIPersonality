@@ -10,9 +10,6 @@ import urllib.request
 import json
 import time
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from bs4 import BeautifulSoup
 from functools import partial
 import sys
 import yaml

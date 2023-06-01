@@ -68,7 +68,7 @@ def generate_response(model, personality:AIPersonality, prompt):
 
         return True
     
-    if personality.processor is not None:
+    if personality.processor is not None and personality.processor_cfg["process_model_input"]:
         preprocessed_prompt = personality.processor.process_model_input(prompt)
     else:
         preprocessed_prompt = prompt
@@ -84,8 +84,8 @@ def generate_response(model, personality:AIPersonality, prompt):
     print(f"{color_green}{full_discussion}")
     print(f"{color_reset}--------------------------------------------")
     print("generating...",end="",flush=True)
-    if personality.processor is not None and hasattr(personality.processor, 'run_workflow'):
-        generated_text = model.generate(full_discussion, n_predict=personality.model_n_predicts, callback=callback)
+    if personality.processor is not None and personality.processor_cfg["custom_workflow"]:
+        generated_text = personality.processor.run_workflow(prompt, full_discussion, callback=callback)
     else:
         generated_text = model.generate(full_discussion, n_predict=personality.model_n_predicts, callback=callback)
     full_discussion_blocks.append(generated_text)
