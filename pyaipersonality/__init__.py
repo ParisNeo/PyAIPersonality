@@ -206,7 +206,7 @@ Date: {{date}}
         self._include_welcome_message_in_disucssion: bool = True
         self._user_message_prefix: str = "## Human: "
         self._link_text: str = "\n"
-        self._ai_message_prefix: str = "## LLLM: "
+        self._ai_message_prefix: str = "## LLLM:"
         self._anti_prompts:list = ["## Human","## LLLM","##Human","##Assistant","##LLLM"]
 
         # Extra

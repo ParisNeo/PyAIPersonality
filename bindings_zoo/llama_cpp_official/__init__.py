@@ -111,7 +111,10 @@ class LLAMACPP(LLMBinding):
                                            ):
                 if count >= n_predict or (tok == self.model.token_eos()):
                     break
-                word = self.model.detokenize([tok]).decode()
+                try:
+                    word = self.model.detokenize([tok]).decode()
+                except:
+                    word = ""
                 if callback is not None:
                     if not callback(word, MSG_TYPE.MSG_TYPE_CHUNK):
                         break

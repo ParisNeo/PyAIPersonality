@@ -26,6 +26,11 @@ setuptools.setup(
     url="https://github.com/ParisNeo/PyAIPersonality",
     packages=setuptools.find_packages(),
     install_requires=requirements,
+    entry_points={
+        'console_scripts': [
+            'pyaipersonality-server = pyaipersonality.lllm_server:main',
+        ],
+    },
     extras_require={"dev": requirements_dev},
     classifiers=[
         "Programming Language :: Python :: 3.8",

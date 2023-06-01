@@ -1,0 +1,3 @@
+Flask_SocketIO==5.3.4
+PyQt5==5.15.9
+python-socketio[client]
