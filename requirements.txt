@@ -3,3 +3,5 @@ pyyaml
 Pillow
 flask
 flask_socketio
+flask-cors
+simple-websocket

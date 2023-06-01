@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request
 from flask_socketio import SocketIO, emit
+from flask_cors import CORS
 from pyaipersonality import AIPersonality
 from pyaipersonality.binding import BindingConfig
 import importlib
@@ -34,9 +35,11 @@ def build_model(bindings_path:Path, cfg: BindingConfig):
     model = binding_class(cfg)
     return model
 
-app = Flask(__name__)
+app = Flask("AIPersonality_Server")
 app.config['SECRET_KEY'] = 'your-secret-key'
+CORS(app)  # Enable CORS for all routes
 socketio = SocketIO(app)
+
 # Set log level to warning
 app.logger.setLevel(logging.WARNING)
 # Configure a custom logger for Flask-SocketIO
