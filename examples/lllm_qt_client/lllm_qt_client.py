@@ -24,7 +24,7 @@ class ServerConnector(QObject):
         self.socketio.on('connect', self.handle_connect)
         self.socketio.on('text_chunk', self.handle_text_chunk)
         self.socketio.on('text_generated', self.handle_text_generated)
-        self.socketio.on('personalities_received', self.handle_personalities_received)
+        self.socketio.on('personalities_list', self.handle_personalities_received)
 
     def handle_connect(self):
         self.socketio.emit('connect')
@@ -76,6 +76,7 @@ class ServerConnector(QObject):
         self.text_generated.emit(text)
 
     def handle_personalities_received(self, data):
+        print("Received List of personalities")
         personalities = data['personalities']
         self.personalities = personalities
         self.personalities_received.emit(personalities)
