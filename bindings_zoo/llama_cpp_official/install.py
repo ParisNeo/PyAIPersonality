@@ -27,7 +27,7 @@ class Install:
             subprocess.run(["pip", "install", "--no-cache-dir", "-r", str(requirements_file)])
 
             # Create ther models folder
-            models_folder = Path("./models/c_transformers")
+            models_folder = Path("./models/llama_cpp_official")
             models_folder.mkdir(exist_ok=True, parents=True)
             
             #Create the install file 

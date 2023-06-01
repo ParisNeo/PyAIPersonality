@@ -172,3 +172,4 @@ src
 shared/*
 *.ckpt
 *.safetensors
+personalities_zoo/english/custom
