@@ -7,6 +7,8 @@ from pathlib import Path
 import argparse
 import logging
 
+# Store connected clients
+clients = {}
 
 def build_model(bindings_path:Path, cfg: BindingConfig):
     binding_path = Path(bindings_path)/cfg["binding"]
@@ -45,34 +47,37 @@ socketio_log.addHandler(logging.StreamHandler())
 
 @socketio.on('connect')
 def handle_connect():
-    session_id = request.sid
-    print(f'Client connected with session ID: {session_id}')
+    client_id = request.sid
+    clients[client_id] = request.namespace
+    print(f'Client connected with session ID: {client_id}')
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    session_id = request.sid
-    print(f'Client disconnected with session ID: {session_id}')
+    client_id = request.sid
+    if client_id in clients:
+        del clients[client_id]
+    print(f'Client disconnected with session ID: {client_id}')
 
 
 @socketio.on('generate_text')
 def handle_generate_text(data):
     # Placeholder code for text generation
     # Replace this with your actual text generation logic
-    session_id = request.sid
+    client_id = data['client_id']
     prompt = data['prompt']
     generated_text = f"Generated text for '{prompt}'"
-    print(f"Text generation requested by client :{session_id}")
+    print(f"Text generation requested by client :{client_id}")
 
     def callback(text):
         print(text,end="",flush=True)
         # Emit the generated text to the client
-        emit('text_chunk', {'chunk': text})
+        emit('text_chunk', {'chunk': text}, room=clients[client_id])
         return True
 
     generated_text = model.generate(prompt, new_text_callback=callback)
     
     # Emit the generated text to the client
-    emit('text_generated', {'text': generated_text})
+    emit('text_generated', {'text': generated_text}, room=clients[client_id])
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
