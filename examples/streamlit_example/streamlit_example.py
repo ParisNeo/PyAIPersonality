@@ -59,7 +59,7 @@ def build_model(bindings_path:Path, cfg: BindingConfig):
     return model
 
 # Define a function to generate a chatbot response
-def generate_response(model, personality, prompt):
+def generate_response(model, personality:AIPersonality, prompt):
     answer[0]=''
     def callback(text, messsage_type:MSG_TYPE):
         if messsage_type==MSG_TYPE.MSG_TYPE_CHUNK:
@@ -85,9 +85,9 @@ def generate_response(model, personality, prompt):
     print(f"{color_reset}--------------------------------------------")
     print("generating...",end="",flush=True)
     if personality.processor is not None and hasattr(personality.processor, 'run_workflow'):
-        generated_text = model.generate(full_discussion, callback=callback)
+        generated_text = model.generate(full_discussion, n_predict=personality.model_n_predicts, callback=callback)
     else:
-        generated_text = model.generate(full_discussion, callback=callback)
+        generated_text = model.generate(full_discussion, n_predict=personality.model_n_predicts, callback=callback)
     full_discussion_blocks.append(generated_text)
     print(f"{color_green}ok{color_reset}",end="",flush=True)
     

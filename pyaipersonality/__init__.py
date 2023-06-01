@@ -218,7 +218,7 @@ Date: {{date}}
         
         # Default model parameters
         self._model_temperature: float = 0.8 # higher: more creative, lower more deterministic
-        self._model_n_predicts: int = 1024 # higher: generates many words, lower generates
+        self._model_n_predicts: int = 2048 # higher: generates many words, lower generates
         self._model_top_k: int = 50
         self._model_top_p: float = 0.95
         self._model_repeat_penalty: float = 1.3

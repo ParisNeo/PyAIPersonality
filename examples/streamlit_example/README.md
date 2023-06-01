@@ -7,6 +7,8 @@ Now create your project with the following structure
 root
 |- bindings/
 | |- Grub a binding from the bindings zoo
+|- configs/
+| |- Grub the config.yaml from the configs dir of the repository and change it aas you like
 |- models/
 | |- The binding name (will be created when you install the binding)
 |- personalities/
