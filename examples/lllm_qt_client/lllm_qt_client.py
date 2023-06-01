@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit, QVBoxLayout, QWidget, QToolBar, QAction, QPushButton, QStatusBar, QComboBox
+from PyQt5.QtWidgets import QApplication, QMainWindow, QTextEdit,QHBoxLayout, QLineEdit, QVBoxLayout, QWidget, QToolBar, QAction, QPushButton, QStatusBar, QComboBox
 from PyQt5.QtSvg import QSvgWidget
 from socketio.client import Client
 from socketio.exceptions import ConnectionError
@@ -85,9 +85,15 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
         self.setWindowTitle("AIPersonality Client")
+
+        self.user_input_layout = QHBoxLayout()
+        self.user_text = QLineEdit()
         self.text_edit = QTextEdit()
         self.toolbar = QToolBar()
         self.submit_button = QPushButton("Submit")
+        self.user_input_layout.addWidget(self.user_text)
+        self.user_input_layout.addWidget(self.submit_button)
+
         self.statusbar = QStatusBar()
         self.personality_combo_box = QComboBox()
 
@@ -100,8 +106,8 @@ class MainWindow(QMainWindow):
         self.addToolBar(self.toolbar)
 
         layout = QVBoxLayout()
+        layout.addLayout(self.user_input_layout)
         layout.addWidget(self.text_edit)
-        layout.addWidget(self.submit_button)
 
         widget = QWidget()
         widget.setLayout(layout)
@@ -131,7 +137,8 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot()
     def submit_text(self):
-        prompt = self.text_edit.toPlainText()
+        prompt = self.user_text.toPlainText()
+        self.text_edit.insertPlainText("User:"+prompt+"\n")
         self.connector.generate_text(prompt)
 
     @pyqtSlot(str)
