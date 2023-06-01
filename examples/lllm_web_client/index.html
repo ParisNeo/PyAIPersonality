@@ -1,38 +1,171 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
-    <script type="text/javascript">
-        var host = 'http://localhost';  // Replace with your desired host
-        var port = 9600;  // Replace with your desired port
-
-        var socket = io(location.protocol + "//" + host + ':' + port);
-        console.log("Socket created")
-
-        socket.on('connect', function() {
-            console.log('Connected to server');
-        });
-
-        socket.on('disconnect', function() {
-            console.log('Disconnected from server');
-        });
-
-        function generateText() {
-            var prompt = document.getElementById('prompt').value;
-            console.log(prompt)
-            socket.emit('generate_text', { 'prompt': prompt });
-            console.log('request emitted')
+    <title>AIPersonality Client</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
         }
 
-        socket.on('text_generated', function(data) {
-            var text = data.text;
-            document.getElementById('output').innerHTML += text + '<br>';
-        });
-    </script>
+        #user-input {
+            display: flex;
+            margin-bottom: 10px;
+        }
+
+        #user-text {
+            flex-grow: 1;
+            margin-right: 10px;
+        }
+
+        #text-edit {
+            height: 300px;
+            width: 100%;
+            resize: none;
+            padding: 5px;
+        }
+
+        #toolbar {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        #status-bar {
+            padding: 5px;
+            background-color: #f5f5f5;
+        }
+    </style>
 </head>
 <body>
-    <input type="text" id="prompt" placeholder="Enter prompt">
-    <button onclick="generateText()">Generate</button>
-    <div id="output"></div>
+    <div id="user-input">
+        <input type="text" id="user-text" placeholder="Enter your text">
+        <button id="submit-button">Submit</button>
+    </div>
+    <div id="toolbar">
+        <input type="checkbox" id="connect-checkbox">
+        <label for="connect-checkbox">Connect</label>
+        <select id="personality-select"></select>
+    </div>
+    <textarea id="text-edit" readonly></textarea>
+    <div id="status-bar">Disconnected from the server</div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.4.1/socket.io.js"></script>
+    <script>
+        const connectCheckbox = document.getElementById('connect-checkbox');
+        const personalitySelect = document.getElementById('personality-select');
+        const userText = document.getElementById('user-text');
+        const submitButton = document.getElementById('submit-button');
+        const textEdit = document.getElementById('text-edit');
+        const statusBar = document.getElementById('status-bar');
+
+        let socket;
+        let connected = false;
+        let personalities = [];
+        let selectedPersonality = 'default_personality';
+
+        connectCheckbox.addEventListener('change', toggleConnection);
+        submitButton.addEventListener('click', submitText);
+
+        connectToServer();
+
+        function connectToServer() {
+            const socket = io('http://localhost:9600', {
+                transports: ['websocket'],
+                withCredentials: true,
+                extraHeaders: {
+                    'Origin': 'http://localhost:8000'  // Replace with your actual origin
+                }
+                });
+
+            socket.on('connect', handleConnect);
+            socket.on('text_chunk', handleTextChunk);
+            socket.on('text_generated', handleTextGenerated);
+            socket.on('personalities_list', handlePersonalitiesReceived);
+        }
+
+        function toggleConnection() {
+            if (connectCheckbox.checked) {
+                connectToServer();
+            } else {
+                disconnectFromServer();
+            }
+        }
+
+        function disconnectFromServer() {
+            if (connected) {
+                socket.disconnect();
+                connected = false;
+                updateStatusBar(false);
+            }
+        }
+
+        function listPersonalities() {
+            socket.emit('list_personalities');
+        }
+
+        function generateText(prompt) {
+            if (!connected) {
+                handleConnectionFailed();
+                return;
+            }
+
+            const data = {
+                client_id: socket.id,
+                prompt,
+                personality: selectedPersonality
+            };
+            socket.emit('generate_text', data);
+        }
+
+        function handleConnect() {
+            socket.emit('connect');
+            connected = true;
+            updateStatusBar(true);
+            listPersonalities();
+        }
+
+        function handleTextChunk(data) {
+            const chunk = data.chunk;
+            textEdit.value += chunk;
+        }
+
+        function handleTextGenerated(data) {
+            const text = data.text;
+            textEdit.value += text;
+        }
+
+        function handlePersonalitiesReceived(data) {
+            console.log('Received List of personalities');
+            personalities = data.personalities;
+            updatePersonalitySelect();
+        }
+
+        function submitText() {
+            const prompt = userText.value;
+            selectedPersonality = personalitySelect.value;
+            textEdit.value += `User: ${prompt}\n${selectedPersonality}:`;
+            generateText(prompt);
+        }
+
+        function handleConnectionFailed() {
+            textEdit.value += 'Failed to connect to the server.\n';
+        }
+
+        function updateStatusBar(connected) {
+            if (connected) {
+                statusBar.textContent = 'Connected to the server';
+            } else {
+                statusBar.textContent = 'Disconnected from the server';
+            }
+        }
+
+        function updatePersonalitySelect() {
+            let optionsHtml = '';
+            for (const personality of personalities) {
+                optionsHtml += `<option value="${personality}">${personality}</option>`;
+            }
+            personalitySelect.innerHTML = optionsHtml;
+        }
+    </script>
 </body>
 </html>
