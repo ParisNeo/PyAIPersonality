@@ -21,7 +21,17 @@ You can install PyAIPersonality using pip:
 ```bash
 pip install pyaipersonality
 ```
+# LLLM server
 
+We also offer a generic backend that allows you to access multiple 
+```bash
+pyaipersonality-server -b <the path to the bindings folder> -m <the name of the model file> -p <a list of personalities paths>
+```
+
+for example:
+```bash
+pyaipersonality-server -b llama_cpp_official -m Manticore-13B.ggmlv3.q4_0.bin -p personalities_zoo/english/art/gpt4art personalities_zoo/english/generic/gpt4all personalities_zoo/english/generic/tree_of_thoughts
+```
 
 # Naming Rationale
 For our new multi-personality AI agent library, we wanted to come up with a naming scheme that reflected our love for science fiction and artificial intelligence. Each release of the application will feature a different AI agent with a distinct personality and set of capabilities, so we felt it was important to give each version a unique and memorable name.
