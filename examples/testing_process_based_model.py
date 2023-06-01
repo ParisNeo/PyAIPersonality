@@ -108,7 +108,7 @@ class ModelProcess:
         if self.config["override_personality_model_parameters"]:
             self.model.generate(
                 prompt,
-                new_text_callback=self._callback,
+                callback=self._callback,
                 n_predict=total_n_predict,
                 temp=self.config['temperature'],
                 top_k=self.config['top_k'],
@@ -121,7 +121,7 @@ class ModelProcess:
         else:
             self.model.generate(
                 prompt,
-                new_text_callback=self._callback,
+                callback=self._callback,
                 n_predict=total_n_predict,
                 temp=self.personality.model_temperature,
                 top_k=self.personality.model_top_k,

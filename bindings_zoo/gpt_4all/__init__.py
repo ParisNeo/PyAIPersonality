@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Callable
 from gpt4all import GPT4All
 from pyaipersonality.binding import LLMBinding
+from pyaipersonality  import MSG_TYPE
 import yaml
 
 __author__ = "parisneo"
@@ -71,7 +72,7 @@ class GPT4ALL(LLMBinding):
     def generate(self, 
                  prompt:str,                  
                  n_predict: int = 128,
-                 new_text_callback: Callable[[str], None] = bool,
+                 callback: Callable[[str], None] = bool,
                  verbose: bool = False,
                  **gpt_params ):
         """Generates text out of a prompt
@@ -79,7 +80,7 @@ class GPT4ALL(LLMBinding):
         Args:
             prompt (str): The prompt to use for generation
             n_predict (int, optional): Number of tokens to predict. Defaults to 128.
-            new_text_callback (Callable[[str], None], optional): A callback function that is called every time a new text element is generated. Defaults to None.
+            callback (Callable[[str], None], optional): A callback function that is called every time a new text element is generated. Defaults to None.
             verbose (bool, optional): If true, the code will spit many information about the generation process. Defaults to False.
             **gpt_params: Additional parameters for GPT generation.
                 temperature (float, optional): Controls the randomness of the generated text. Higher values (e.g., 1.0) make the output more random, while lower values (e.g., 0.2) make it more deterministic. Defaults to 0.7 if not provided.
@@ -103,8 +104,8 @@ class GPT4ALL(LLMBinding):
             def local_callback(token_id, response):
                 decoded_word = response.decode('utf-8')
                 response_text.append( decoded_word )
-                if new_text_callback is not None:
-                    if not new_text_callback(decoded_word):
+                if callback is not None:
+                    if not callback(decoded_word, MSG_TYPE.MSG_TYPE_CHUNK):
                         return False
 
                 # Do whatever you want with decoded_token here.

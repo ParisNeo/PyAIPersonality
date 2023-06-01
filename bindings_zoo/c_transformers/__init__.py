@@ -14,6 +14,7 @@
 from pathlib import Path
 from typing import Callable
 from pyaipersonality.binding import LLMBinding
+from pyaipersonality  import MSG_TYPE
 import yaml
 from ctransformers import AutoModelForCausalLM
 
@@ -88,7 +89,7 @@ class CTRansformers(LLMBinding):
     def generate(self, 
                  prompt:str,                  
                  n_predict: int = 128,
-                 new_text_callback: Callable[[str], None] = bool,
+                 callback: Callable[[str], None] = bool,
                  verbose: bool = False,
                  **gpt_params ):
         """Generates text out of a prompt
@@ -96,7 +97,7 @@ class CTRansformers(LLMBinding):
         Args:
             prompt (str): The prompt to use for generation
             n_predict (int, optional): Number of tokens to predict. Defaults to 128.
-            new_text_callback (Callable[[str], None], optional): A callback function that is called every time a new text element is generated. Defaults to None.
+            callback (Callable[[str], None], optional): A callback function that is called every time a new text element is generated. Defaults to None.
             verbose (bool, optional): If true, the code will spit many information about the generation process. Defaults to False.
             **gpt_params: Additional parameters for GPT generation.
                 temperature (float, optional): Controls the randomness of the generated text. Higher values (e.g., 1.0) make the output more random, while lower values (e.g., 0.2) make it more deterministic. Defaults to 0.7 if not provided.
@@ -137,8 +138,8 @@ class CTRansformers(LLMBinding):
                 if count >= n_predict or self.model.is_eos_token(tok):
                     break
                 word = self.model.detokenize(tok)
-                if new_text_callback is not None:
-                    if not new_text_callback(word):
+                if callback is not None:
+                    if not callback(word, MSG_TYPE.MSG_TYPE_CHUNK):
                         break
                 output += word
                 count += 1

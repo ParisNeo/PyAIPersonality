@@ -77,7 +77,7 @@ def handle_generate_text(data):
         emit('text_chunk', {'chunk': text}, room=clients[client_id])
         return True
 
-    generated_text = model.generate(prompt, new_text_callback=callback)
+    generated_text = model.generate(prompt, callback=callback)
     
     # Emit the generated text to the client
     emit('text_generated', {'text': generated_text}, room=clients[client_id])

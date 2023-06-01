@@ -5,7 +5,7 @@ import sys
 sd_folder = Path(".") / "shared/sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
-from pyaipersonality import PAPScript, AIPersonality
+from pyaipersonality import PAPScript, AIPersonality, MSG_TYPE
 import time
 
 import sys
@@ -407,7 +407,7 @@ class Processor(PAPScript):
         print(prompt)
         sd_prompt = self.generate(prompt, self.config["max_generation_prompt_size"])
         if callback is not None:
-            callback(sd_prompt.strip()+"\n", 0)
+            callback(sd_prompt.strip()+"\n", MSG_TYPE.MSG_TYPE_CHUNK)
 
         files = self.sd.generate(sd_prompt.strip(), self.config["num_images"], self.config["seed"])
         output = sd_prompt.strip()+"\n"

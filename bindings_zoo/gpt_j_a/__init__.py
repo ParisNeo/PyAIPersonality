@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Callable
 from pygptj.model import Model
 from pyaipersonality.binding import LLMBinding
+from pyaipersonality  import MSG_TYPE
 
 __author__ = "parisneo"
 __github__ = "https://github.com/ParisNeo/gpt4all-ui"
@@ -65,7 +66,7 @@ class GptJ(LLMBinding):
     def generate(self, 
                  prompt:str,                  
                  n_predict: int = 128,
-                 new_text_callback: Callable[[str], None] = bool,
+                 callback: Callable[[str], None] = bool,
                  verbose: bool = False,
                  **gpt_params ):
         """Generates text out of a prompt
@@ -73,7 +74,7 @@ class GptJ(LLMBinding):
         Args:
             prompt (str): The prompt to use for generation
             n_predict (int, optional): Number of tokens to prodict. Defaults to 128.
-            new_text_callback (Callable[[str], None], optional): A callback function that is called everytime a new text element is generated. Defaults to None.
+            callback (Callable[[str], None], optional): A callback function that is called everytime a new text element is generated. Defaults to None.
             verbose (bool, optional): If true, the code will spit many informations about the generation process. Defaults to False.
         """
         try:
@@ -89,8 +90,8 @@ class GptJ(LLMBinding):
                                             n_threads=self.config['n_threads'],
                                            ):
                 output += tok
-                if new_text_callback is not None:
-                    if not new_text_callback(tok):
+                if callback is not None:
+                    if not callback(tok, MSG_TYPE.MSG_TYPE_CHUNK):
                         return output
         except Exception as ex:
             print(ex)

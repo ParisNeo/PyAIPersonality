@@ -4,7 +4,7 @@ import os
 import sys
 sd_folder = Path(__file__).resolve().parent.parent / "sd"
 sys.path.append(str(sd_folder))
-from pyaipersonality import PAPScript, AIPersonality
+from pyaipersonality import PAPScript, AIPersonality, MSG_TYPE
 import urllib.parse
 import urllib.request
 import json
@@ -129,7 +129,7 @@ Write the next idea. Please give a single idea.
                 local_ideas.append(idea.strip())
                 judgement_prompt += f"\n### Idea {i}:{idea}\n"
                 if callback is not None:
-                    callback(f"\n### Idea {i+1}:\n"+idea,1)
+                    callback(f"\n### Idea {i+1}:\n"+idea, MSG_TYPE.MSG_TYPE_FULL)
             prompt_ids = ",".join([str(i) for i in range(self.config["nb_samples_per_idea"])])
             judgement_prompt += f"### Instructions:\nWhich idea seems the most approcpriate. Answer the question by giving the best idea number without explanations.\nWhat is the best idea number {prompt_ids}?\n"
             print(judgement_prompt)
@@ -140,14 +140,14 @@ Write the next idea. Please give a single idea.
                 print(f"Chosen thoght n:{number}")
                 final_ideas.append(local_ideas[number]) 
                 if callback is not None:
-                    callback(f"### Best local idea:\n{best_local_idea}",1)
+                    callback(f"### Best local idea:\n{best_local_idea}", MSG_TYPE.MSG_TYPE_FULL)
             else:
                 print("Warning, the model made a wrond answer, taking random idea as the best")
                 number = random.randint(0,self.config["nb_samples_per_idea"])-1
                 print(f"Chosen thoght n:{number}")
                 final_ideas.append(local_ideas[number]) 
                 if callback is not None:
-                    callback(f"### Best local idea:\n{best_local_idea}",1)
+                    callback(f"### Best local idea:\n{best_local_idea}", MSG_TYPE.MSG_TYPE_FULL)
 
         summary_prompt += "### Instructions:\nCombine these ideas in a comprihensive essai.\n"
         for idea in final_ideas:

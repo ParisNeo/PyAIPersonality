@@ -1,4 +1,4 @@
-from pyaipersonality import AIPersonality
+from pyaipersonality import AIPersonality, MSG_TYPE
 from llama_cpp import Llama
 
 from pathlib import Path
@@ -42,7 +42,7 @@ def generate_output(model, prompt, max_tokens, callback=None):
             break
         
         if callback is not None:
-            if not callback(word):
+            if not callback(word, MSG_TYPE.MSG_TYPE_CHUNK):
                 break
         else:
             print(f"{word}", end='', flush=True)

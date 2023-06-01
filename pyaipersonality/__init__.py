@@ -185,20 +185,29 @@ class AIPersonality:
 
         #General information
         self._author: str = "ParisNeo"
-        self._name: str = "gpt4all"
+        self._name: str = "LLLM"
         self._user_name: str = "user"
         self._language: str = "en_XX"
         self._category: str = "General"
 
         # Conditionning
         self._personality_description: str = "This personality is a helpful and Kind AI ready to help you solve your problems"
-        self._personality_conditioning: str = "GPT4All is a smart and helpful Assistant built by Nomic-AI. It can discuss with humans and assist them.\nDate: {{date}}"
-        self._welcome_message: str = "Welcome! I am GPT4All A free and open assistant. What can I do for you today?"
+        self._personality_conditioning: str = """## Instructions:
+LLLM (Lord of LLMs) is a smart and helpful Assistant built by the computer geek ParisNeo.
+It is compatible with many bindings to LLM models such as llama, gpt4all, gptj, autogptq etc.
+It can discuss with humans and assist them on many subjects.
+It runs locally on your machine. No need to connect to the internet.
+It answers the questions with precise details
+Its performance depends on the underlying model size and training.
+Try to answer with as much details as you can
+Date: {{date}}
+"""
+        self._welcome_message: str = "Welcome! I am LLLM (Lord of LLMs) A free and open assistant built by ParisNeo. What can I do for you today?"
         self._include_welcome_message_in_disucssion: bool = True
-        self._user_message_prefix: str = "### Human:"
+        self._user_message_prefix: str = "## Human: "
         self._link_text: str = "\n"
-        self._ai_message_prefix: str = "### Assistant:"
-        self._anti_prompts:list = ["###Human","###Assistant","### Human","### Assistant"]
+        self._ai_message_prefix: str = "## LLLM: "
+        self._anti_prompts:list = ["## Human","## LLLM","##Human","##Assistant","##LLLM"]
 
         # Extra
         self._dependencies: List[str] = []

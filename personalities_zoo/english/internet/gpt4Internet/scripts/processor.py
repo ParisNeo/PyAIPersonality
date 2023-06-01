@@ -1,4 +1,4 @@
-from pyaipersonality import PAPScript, AIPersonality
+from pyaipersonality import PAPScript, AIPersonality, MSG_TYPE
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -187,10 +187,10 @@ Do not explain the query.
         if search_query=="":
             search_query=prompt
         if callback is not None:
-            callback("Crafted search query :"+search_query+"\nSearching...", 1)
+            callback("Crafted search query :"+search_query+"\nSearching...", MSG_TYPE.MSG_TYPE_FULL)
         search_result, results = self.internet_search(search_query)
         if callback is not None:
-            callback("Crafted search query :"+search_query+"\nSearching... OK\nSummerizing...", 1)
+            callback("Crafted search query :"+search_query+"\nSearching... OK\nSummerizing...", MSG_TYPE.MSG_TYPE_FULL)
         prompt = f"""### Instructions:
 Use Search engine results to answer user question by summerizing the results in a single coherant paragraph in form of a markdown text with sources citation links in the format [index](source).
 Place the citation links in front of each relevant information.
@@ -210,7 +210,7 @@ Place the citation links in front of each relevant information.
 
         output = output+sources_text
         if callback is not None:
-            callback(output, 1)
+            callback(output, MSG_TYPE.MSG_TYPE_FULL)
 
         return output
 

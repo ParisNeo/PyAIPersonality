@@ -5,11 +5,12 @@ import sys
 sd_folder = Path(__file__).resolve().parent.parent / "sd"
 sys.path.append(str(sd_folder))
 from scripts.txt2img import *
-from pyaipersonality import PAPScript, AIPersonality
+from pyaipersonality import PAPScript, AIPersonality, MSG_TYPE
 import urllib.parse
 import urllib.request
 import json
 import time
+
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
@@ -412,7 +413,7 @@ class Processor(PAPScript):
         print(prompt)
         sd_prompt = self.generate(prompt, self.config["max_generation_prompt_size"])
         if callback is not None:
-            callback(sd_prompt+"\n", 0)
+            callback(sd_prompt+"\n", MSG_TYPE.MSG_TYPE_CHUNK)
 
         files = self.sd.generate(sd_prompt, self.config["num_images"], self.config["seed"])
         output = ""
@@ -422,9 +423,7 @@ class Processor(PAPScript):
             (width, height) = image.size
             ascii_art = convert_to_ascii_art(image)
             output +="```\n"+ "\n".join(ascii_art) + "\n```"
-            
-        if callback is not None:
-            callback(output, 3)
+
 
         return output
 

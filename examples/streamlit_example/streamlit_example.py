@@ -1,9 +1,33 @@
 import streamlit as st
-from pyaipersonality import AIPersonality
+from pyaipersonality import AIPersonality, MSG_TYPE
 from pyaipersonality.binding import BindingConfig
 from pathlib import Path
 import argparse
 import importlib
+
+# Reset
+color_reset = '\u001b[0m'
+
+# Regular colors
+color_black = '\u001b[30m'
+color_red = '\u001b[31m'
+color_green = '\u001b[32m'
+color_yellow = '\u001b[33m'
+color_blue = '\u001b[34m'
+color_magenta = '\u001b[35m'
+color_cyan = '\u001b[36m'
+color_white = '\u001b[37m'
+
+# Bright colors
+color_bright_black = '\u001b[30;1m'
+color_bright_red = '\u001b[31;1m'
+color_bright_green = '\u001b[32;1m'
+color_bright_yellow = '\u001b[33;1m'
+color_bright_blue = '\u001b[34;1m'
+color_bright_magenta = '\u001b[35;1m'
+color_bright_cyan = '\u001b[36;1m'
+color_bright_white = '\u001b[37;1m'
+
 
 full_discussion_blocks=[]
 elements={}
@@ -37,10 +61,11 @@ def build_model(bindings_path:Path, cfg: BindingConfig):
 # Define a function to generate a chatbot response
 def generate_response(model, personality, prompt):
     answer[0]=''
-    def callback(text):
-        answer[0]  = answer[0] + text
-        elements["output"].write(answer)
-        # print(text,end="",flush=True)
+    def callback(text, messsage_type:MSG_TYPE):
+        if messsage_type==MSG_TYPE.MSG_TYPE_CHUNK:
+            answer[0]  = answer[0] + text
+            elements["output"].write(answer)
+
         return True
     
     if personality.processor is not None:
@@ -55,8 +80,16 @@ def generate_response(model, personality, prompt):
         
     full_discussion = ''.join(full_discussion_blocks)
     
-    generated_text = model.generate(full_discussion, new_text_callback=callback)
+    print(f"---------------- Input prompt -------------------")
+    print(f"{color_green}{full_discussion}")
+    print(f"{color_reset}--------------------------------------------")
+    print("generating...",end="",flush=True)
+    if personality.processor is not None and hasattr(personality.processor, 'run_workflow'):
+        generated_text = model.generate(full_discussion, callback=callback)
+    else:
+        generated_text = model.generate(full_discussion, callback=callback)
     full_discussion_blocks.append(generated_text)
+    print(f"{color_green}ok{color_reset}",end="",flush=True)
     
     return generated_text
 

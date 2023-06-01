@@ -67,7 +67,7 @@ if __name__=="__main__":
                 print(text,end="",flush=True)
                 return True
 
-            output = model.generate(full_discussion, new_text_callback=callback)
+            output = model.generate(full_discussion, callback=callback)
             print("\n")
 
             if personality.processor is not None:

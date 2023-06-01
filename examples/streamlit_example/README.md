@@ -9,6 +9,8 @@ root
 | |- Grub a binding from the bindings zoo
 |- models/
 | |- The binding name (will be created when you install the binding)
+|- personalities/
+| |- Here you can install any personality you want from the zoo
 |- install_binding.py
 |- streamlit_example.py
 
@@ -39,6 +41,8 @@ https://huggingface.co/TheBloke/Manticore-13B-GGML/resolve/main/Manticore-13B.gg
 ```
 Once done, you are ready to go. Launch your streamlit server :
 ```bash
-streamlit run examples/streamlit_example/streamlit_example.py -- -bp bindings -m Manticore-13B.ggmlv3.q4_0.bin
+streamlit run examples/streamlit_example/streamlit_example.py -- -m Manticore-13B.ggmlv3.q4_0.bin
 ```
 
+# Note
+you can also select your personality by using -p and giving the full path to the personality
