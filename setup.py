@@ -17,7 +17,7 @@ requirements_dev = read_requirements("requirements_dev.txt")
 
 setuptools.setup(
     name="pyaipersonality",
-    version="1.0.2",
+    version="1.0.3",
     author="Saifeddine ALOUI",
     author_email="aloui.saifeddine@gmail.com",
     description="A python library for AI personality definition",
@@ -28,7 +28,7 @@ setuptools.setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            'pyaipersonality-server = pyaipersonality.lllm_server:main',
+            'pyaipersonality-server = pyaipersonality.server:main',
         ],
     },
     extras_require={"dev": requirements_dev},
